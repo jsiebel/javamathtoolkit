@@ -3,6 +3,7 @@ package jamato.polynomial;
 import static jamato.polynomial.DoublePolynomial.valueOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
@@ -277,6 +278,20 @@ public class DoublePolynomialTest {
 				valueOf("3x³+3x²+3x+3").applyAsDouble(10),
 				0
 				);
+	}
+	
+	@Test
+	public void testEquals() {
+		assertEquals(new DoublePolynomial(1, 2, 3), new DoublePolynomial(1, 2, 3));
+		assertNotEquals(new DoublePolynomial(1, 2, 3), new DoublePolynomial(0, 1, 2, 3));
+		assertEquals(new DoublePolynomial(1, -0.0, 1), new DoublePolynomial(1, 0.0, 1));
+	}
+	
+	@Test
+	public void testHashcode() {
+		assertEquals(new DoublePolynomial(1, 2, 3).hashCode(), new DoublePolynomial(1, 2, 3).hashCode());
+		assertNotEquals(new DoublePolynomial(1, 2, 3).hashCode(), new DoublePolynomial(0, 1, 2, 3).hashCode());
+		assertEquals(new DoublePolynomial(1, -0.0, 1).hashCode(), new DoublePolynomial(1, 0.0, 1).hashCode());
 	}
 	
 	@Test

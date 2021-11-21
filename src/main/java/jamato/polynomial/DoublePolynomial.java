@@ -296,7 +296,13 @@ public class DoublePolynomial implements Ring<DoublePolynomial>, DoubleUnaryOper
 	
 	@Override
 	public int hashCode() {
-		return Arrays.hashCode(coefficients);
+		// Like Double.hashcode, but counts negative zero as positive zero
+        int result = 1;
+        for (double element : coefficients) {
+            long bits = Double.doubleToLongBits(element == 0 ? 0 : element);
+            result = 31 * result + (int)(bits ^ (bits >>> 32));
+        }
+        return result;
 	}
 	
 	@Override
