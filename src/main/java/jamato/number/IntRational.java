@@ -1,0 +1,568 @@
+package jamato.number;
+
+import java.math.BigInteger;
+import java.math.RoundingMode;
+import java.util.Objects;
+
+import jamato.algebra.GCD;
+import jamato.algebra.Ring;
+
+/**
+ * An immutable rational number with integer nominator and denominator. The
+ * nominator and denominator are reduced, the nominator is never negative. In
+ * case of an overflow of the nominator or denominator in the result of an
+ * operation, the result is approximated.
+ * <p>
+ * Operations on the special values {@link #POSITIVE_INFINITY},
+ * {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like their equivalents in
+ * the {@link Double} class.
+ * 
+ * @author JSiebel
+ *
+ */
+public class IntRational extends Number implements Ring<IntRational>, Comparable<IntRational>{
+	
+	private static final long serialVersionUID = -1358115182615374506L;
+
+	/** The IntRational constant 0 */
+	public static final IntRational ZERO = new IntRational(0, 1);
+	/** The IntRational constant 1 */
+	public static final IntRational ONE = new IntRational(1, 1);
+	/** The IntRational constant NAN */
+	public static final IntRational NAN = new IntRational(0, 0);
+	/** The IntRational constant positive infinity */
+	public static final IntRational POSITIVE_INFINITY = new IntRational(1, 0);
+	/** The IntRational constant negative infinity */
+	public static final IntRational NEGATIVE_INFINITY = new IntRational(-1, 0);
+
+	/** The nominator of this IntRational. */
+	public final int nominator;
+
+	/** The denominator of this IntRational. */
+	public final int denominator;
+
+	/**
+	 * Creates an IntRational with the value equal to {@code nominator/denominator}.
+	 * If the denominator is {@code 0}, the result is {@link #POSITIVE_INFINITY}
+	 * (for positive nominators), {@link #NEGATIVE_INFINITY} (for negative
+	 * nominators), or {@link #NAN} (if the nominator is {@code 0}).
+	 * 
+	 * @param nominator   the nominator
+	 * @param denominator the denominator
+	 */
+	public IntRational(int nominator, int denominator) {
+		this(nominator, denominator, GCD.of(nominator, denominator));
+	}
+
+	/**
+	 * Creates an IntRational with the value equal to {@code nominator/1}.
+	 * 
+	 * @param nominator   the nominator
+	 */
+	public IntRational(int nominator) {
+		this(nominator, 1);
+	}
+	
+	protected IntRational(int nominator, int denominator, int gcd) {
+		if (gcd == 0) {
+			this.nominator = 0;
+			this.denominator = 0;
+		} else if (denominator < 0){
+			this.nominator = -nominator / gcd;
+			this.denominator = -denominator / gcd;
+		}else {
+			this.nominator = nominator / gcd;
+			this.denominator = denominator / gcd;
+		}
+	}
+	
+	/**
+	 * Creates an IntRational from a long nominator and denominator. If either is
+	 * not in integer range, the result is approximated. The nomiator and the
+	 * denominator must be coprime.
+	 * 
+	 * @param nominator   the nominator
+	 * @param denominator the denominator
+	 */
+	protected IntRational(long nominator, long denominator) {
+		if (denominator == 0) {
+			this.nominator = (int) Long.signum(nominator);
+			this.denominator = 0;
+		}else if (nominator == 0) {
+			this.nominator = 0;
+			this.denominator = 1;
+		}else {
+			while ((Math.abs(nominator)|Math.abs(denominator)) >> (Integer.SIZE-1) != 0) {
+				nominator /= 2;
+				denominator /= 2;
+				long gcd = GCD.of(nominator, denominator);
+				nominator /= gcd;
+				denominator /= gcd;
+			}
+			this.nominator = (int) nominator;
+			this.denominator = (int) denominator;
+		}
+	}
+	
+	/**
+	 * Creates an IntRational with the given double value. This constructor tries to
+	 * find the smallest nominator and denominator where
+	 * {@code this.doubleValue() == value}.
+	 * 
+	 * @param value a double value
+	 */
+	public IntRational(double value) {
+		if (!Double.isFinite(value)) {
+			nominator = (int) Math.signum(value);
+			denominator = 0;
+		}else if (value < Integer.MIN_VALUE / 2 || value > Integer.MAX_VALUE / 2 + 1) {
+			nominator = (int) value;
+			denominator = 1;
+		} else {
+			/*
+			 * The value is approximated by a continued fraction: Starting with
+			 * value = r_0, in each step the remainder r_n is replaced by
+			 * 		r_n = f_(n+1) + 1/r_(n+1)
+			 * where f_n is an integer close to r_n. The resulting continued
+			 * fraction (with a double at the innermost denominator)
+			 * 		value = f_0+1/(f_1+1/(f_2+...1/(f_n+r_n)...))
+			 * can be expressed as a simple fraction:
+			 * 		value = (a_n+b_n*r_n) / (c_n+d_n*r_n).
+			 * The fraction's coefficients can be calculated iteratively:
+			 * 		a_1 = 1
+			 * 		b_1 = f_1
+			 * 		c_1 = 0
+			 * 		d_1 = 1
+			 * 		a_(n+1) = b_n
+			 * 		b_(n+1) = a_n + b_n * f_(n+1)
+			 * 		c_(n+1) = d_n
+			 * 		d_(n+1) = c_n + d_n * f_(n+1)
+			 * If the remainder r_n is zero, then the value = b_n / d_n
+			 */
+			double floor = Math.floor(value);
+			double remainder = value - floor;
+			
+			int a = 0;
+			int b = 1;
+			int c = 1;
+			int d = 0;
+			
+			a = 1;
+			b = (int) floor;
+			c = 0;
+			d = 1;
+			
+			remainder = 1 / remainder;
+			floor = Math.floor(remainder);
+			while (isInIntRange(c + floor * d) && isInIntRange(a + floor * b)) {
+				int dNext = c + (int) floor * d;
+				int bNext = a + (int) floor * b;
+				
+				a = b;
+				b = bNext;
+				c = d;
+				d = dNext;
+				
+				remainder = 1 / (remainder - floor);
+				floor = Math.floor(remainder);
+			}
+			if (Math.abs(value - (double) a / c) <= Math.abs(value - (double) b / d)) {
+				int signum = Integer.signum(c);
+				nominator = a * signum;
+				denominator = c * signum;
+			} else {
+				int signum = Integer.signum(d);
+				nominator = b * signum;
+				denominator = d * signum;
+			}
+		}
+	}
+
+	private static boolean isInIntRange(double d) {
+		return Integer.MIN_VALUE <= d && d <= Integer.MAX_VALUE;
+	}
+	
+	@Override
+	public IntRational negate() {
+		if (nominator == Integer.MIN_VALUE) {
+			return POSITIVE_INFINITY;
+		} else {
+			return new IntRational(-nominator, denominator, 1);
+		}
+	}
+
+	@Override
+	public boolean isZero() {
+		return nominator == 0 && denominator != 0;
+	}
+	
+	@Override
+	public IntRational add(IntRational summand) {
+		if (isFinite() && summand.isFinite()) {
+			long resultNominator = (long)nominator * summand.denominator + (long)summand.nominator * denominator;
+			long resultDenominator = (long)denominator * summand.denominator;
+			long gcd = GCD.of(resultNominator, resultDenominator);
+			return new IntRational(resultNominator / gcd, resultDenominator / gcd);
+		}else if (isFinite()){
+			return summand;
+		}else if (summand.isFinite()) {
+			return this;
+		}else if (nominator == summand.nominator){
+			return this;
+		}else {
+			return NAN;
+		}
+	}
+
+	/**
+	 * Returns an IntRational with the value {@code (this + summand)}.
+	 * @param summand value to be added to this IntRational
+	 * @return {@code (this + summand)}
+	 */
+	public IntRational add(int summand) {
+		return new IntRational(nominator + (long)denominator * summand, denominator);
+	}
+	
+	@Override
+	public IntRational subtract(IntRational subtrahend) {
+		if (isFinite() && subtrahend.isFinite()) {
+			long resultNominator = (long)nominator * subtrahend.denominator - (long)subtrahend.nominator * denominator;
+			long resultDenominator = (long)denominator * subtrahend.denominator;
+			long gcd = GCD.of(resultNominator, resultDenominator);
+			return new IntRational(resultNominator / gcd, resultDenominator / gcd);
+		}else if (isFinite()){
+			return subtrahend.negate();
+		}else if (subtrahend.isFinite()) {
+			return this;
+		}else if (nominator == -subtrahend.nominator){
+			return this;
+		}else {
+			return NAN;
+		}
+	}
+
+	/**
+	 * Returns an IntRational with the value {@code (this - subtrahend)}.
+	 * @param subtrahend value to be subtracted from this IntRational
+	 * @return {@code (this - subtrahend)}
+	 */
+	public IntRational subtract(int subtrahend) {
+		return new IntRational(nominator - (long)denominator * subtrahend, denominator);
+	}
+	
+	@Override
+	public IntRational invert() {
+		return new IntRational(denominator, nominator, 1);
+	}
+
+	@Override
+	public boolean isOne() {
+		return equals(ONE);
+	}
+	
+	@Override
+	public IntRational multiply(IntRational factor) {
+		if (isFinite() && factor.isFinite()) {
+			int gcd1 = GCD.of(nominator, factor.denominator);
+			int gcd2 = GCD.of(factor.nominator, denominator);
+			return new IntRational(
+					nominator / gcd1 * (long)(factor.nominator / gcd2),
+					denominator / gcd2 * (long)(factor.denominator / gcd1));
+		}else {
+			return new IntRational(Integer.signum(nominator) * Integer.signum(factor.nominator), 0);
+		}
+	}
+	
+	/**
+	 * Returns a multiple of this.
+	 * 
+	 * @param factor an integer factor
+	 * @return {@code (this * factor)}
+	 */
+	public IntRational multiply(int factor) {
+		int gcd = GCD.of(denominator, factor);
+		return new IntRational((long)nominator * (factor / gcd), denominator / gcd);
+	}
+	
+	/**
+	 * Returns the value {@code (this / divisor)}.
+	 * 
+	 * @param divisor value by which this is to be divided.
+	 * @return {@code (this / divisor)}
+	 */
+	@Override
+	public IntRational divide(IntRational divisor) {
+		if (!isFinite() && !divisor.isFinite() || isNaN() || divisor.isNaN()) {
+			return NAN;
+		} else {
+			int gcd1 = GCD.of(nominator, divisor.nominator);
+			int gcd2 = GCD.of(divisor.denominator, denominator);
+			return new IntRational(
+					nominator / gcd1 * (divisor.denominator / gcd2),
+					denominator / gcd2 * (divisor.nominator / gcd1),
+					1);
+		}
+	}
+	
+	/**
+	 * Returns the value {@code (this / divisor)}.
+	 * 
+	 * @param divisor value by which this is to be divided.
+	 * @return {@code (this / divisor)}
+	 */
+	@Override
+	public IntRational divide(long divisor) {
+		if (isFinite()) {
+			long gcd = GCD.of(nominator, divisor);
+			return new IntRational(nominator / gcd, (long)denominator * (divisor / gcd));
+		}else {
+			return new IntRational(Integer.signum(nominator) * (int)Long.signum(divisor), 0, 1);
+		}
+	}
+	
+    /**
+     * Returns the signum function of this.
+     *
+     * @return -1, 0 or 1 as the value of this is negative, zero/NaN or
+     *         positive.
+     */
+	public int signum() {
+		return Integer.signum(nominator);
+	}
+
+	/**
+	 * Returns the absolute value of this.
+	 * @return {@code (|this|)}
+	 */
+	public IntRational absolute() {
+		if (nominator < 0) {
+			return negate();
+		}else {
+			return this;
+		}
+	}
+
+	/**
+	 * Rounds this number towards negative infinity.
+	 * <p>
+	 * Special cases:
+	 * <ul>
+	 * <li>If this is NaN, the result is 0.
+	 * <li>If this negative infinity, the result is {@code Integer.MIN_VALUE}.
+	 * <li>If this positive infinity, the result is {@code Integer.MAX_VALUE}.
+	 * </ul>
+	 * 
+	 * @return the rounded number as a {@link BigInteger}
+	 */
+	public int floor() {
+		return round(RoundingMode.FLOOR);
+	}
+
+	/**
+	 * Rounds this number towards positive infinity.
+	 * <p>
+	 * Special cases:
+	 * <ul>
+	 * <li>If this is NaN, the result is 0.
+	 * <li>If this negative infinity, the result is {@code Integer.MIN_VALUE}.
+	 * <li>If this positive infinity, the result is {@code Integer.MAX_VALUE}.
+	 * </ul>
+	 * 
+	 * @return the rounded number as a {@link BigInteger}
+	 */
+	public int ceil() {
+		return round(RoundingMode.CEILING);
+	}
+
+	/**
+	 * Rounds this number to the next integer, or away from zero if the two neighbor
+	 * integers have the same distance.
+	 * <p>
+	 * Special cases:
+	 * <ul>
+	 * <li>If this is NaN, the result is 0.
+	 * <li>If this negative infinity, the result is {@code Integer.MIN_VALUE}.
+	 * <li>If this positive infinity, the result is {@code Integer.MAX_VALUE}.
+	 * </ul>
+	 * 
+	 * @return the rounded number as a {@link BigInteger}
+	 */
+	public int round() {
+		return round(RoundingMode.HALF_UP);
+	}
+	
+	/**
+	 * Rounds this number according to the given rounding mode.
+	 * <p>
+	 * Special cases:
+	 * <ul>
+	 * <li>If this is NaN, the result is 0.
+	 * <li>If this negative infinity, the result is {@code Integer.MIN_VALUE}.
+	 * <li>If this positive infinity, the result is {@code Integer.MAX_VALUE}.
+	 * </ul>
+	 * 
+	 * @param roundingMode a {@link RoundingMode}
+	 * @return the rounded number
+	 * @throws ArithmeticException if {@code roundingMode} is
+	 *                             {@link RoundingMode#UNNECESSARY} and this number
+	 *                             is not an integer.
+	 */
+	public int round(RoundingMode roundingMode) {
+		if (isInteger()) {
+			return nominator;
+		} else if (isNaN()) {
+			return 0;
+		} else if (equals(POSITIVE_INFINITY)) {
+			return Integer.MAX_VALUE;
+		} else if (equals(NEGATIVE_INFINITY)) {
+			return Integer.MIN_VALUE;
+		}
+		int remainder = nominator % denominator;
+		int halfIndicator = Integer.compare(2 * Math.abs(remainder), denominator);
+		int quotient = nominator / denominator;
+		
+		boolean awayFromZero;
+		switch (roundingMode) {
+		case UP:
+			awayFromZero = true;
+			break;
+		case DOWN:
+			awayFromZero = false;
+			break;
+		case CEILING:
+			awayFromZero = nominator > 0;
+			break;
+		case FLOOR:
+			awayFromZero = nominator < 0;
+			break;
+		case HALF_UP:
+			awayFromZero = halfIndicator >= 0;
+			break;
+		case HALF_DOWN:
+			awayFromZero = halfIndicator > 0;
+			break;
+		case HALF_EVEN:
+			awayFromZero = halfIndicator > 0 || halfIndicator == 0 && quotient % 2 != 0;
+			break;
+		case UNNECESSARY:
+		default:
+			throw new ArithmeticException();
+		}
+		if (awayFromZero) {
+			quotient += Integer.signum(nominator);
+		}
+		return quotient;
+	}
+
+    /**
+     * Returns {@code true} if this is IntRational finite; returns {@code false} otherwise (for NaN and infinity).
+     *
+     * @return {@code true} if the argument is a finite, {@code false} otherwise
+     */
+	public boolean isFinite() {
+		return denominator != 0;
+	}
+
+	/**
+	 * Returns {@code true} if this is {@link #NAN}, {@code false} otherwise.
+	 *
+	 * @return {@code true} if this is NaN; {@code false}
+	 *         otherwise.
+	 */
+	
+	public boolean isNaN() {
+		return equals(NAN);
+	}
+
+	/**
+	 * Returns {@code true} if this is an integer, {@code false} otherwise.
+	 *
+	 * @return {@code true} if this is an integer; {@code false}
+	 *         otherwise.
+	 */
+	public boolean isInteger() {
+		return denominator == 1;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj == this) {
+			return true;
+		} else if (obj instanceof IntRational) {
+			IntRational intRational = (IntRational) obj;
+			return nominator == intRational.nominator && denominator == intRational.denominator;
+		} else {
+			return false;
+		}
+	}
+	
+	@Override
+	public int hashCode() {
+		return Objects.hash(nominator, denominator);
+	}
+	
+	@Override
+	public String toString() {
+		return denominator == 1 ? nominator + "" : nominator + "/" + denominator;
+	}
+	
+	@Override
+	public double doubleValue() {
+		return (double) nominator / denominator;
+	}
+	
+	@Override
+	public float floatValue() {
+		return (float) nominator / denominator;
+	}
+	
+	@Override
+	public int intValue() {
+		return nominator / denominator;
+	}
+	
+	@Override
+	public long longValue() {
+		return intValue();
+	}
+
+	@Override
+	public int compareTo(IntRational o) {
+		if (this.equals(o)) {
+			return 0;
+		} else if (isFinite() && o.isFinite()) {
+			return Long.compare((long)nominator*o.denominator, (long)denominator*o.nominator);
+		} else if (isNaN()) {
+			return 1;
+		} else if (o.isNaN()) {
+			return -1;
+		} else if (isFinite()) {
+			return -o.nominator;
+		} else {
+			return nominator;
+		}
+	}
+	
+    /**
+	 * Translates the decimal String representation of an IntRational into an
+	 * IntRational. The String representation consists of either two decimal numbers
+	 * separated by a slash ("/"), or a single decimal number. Whitespace is not
+	 * allowed.
+	 *
+	 * @param string the decimal String representation of an IntRational
+     * @return an IntRational with the specified value
+	 * @throws NumberFormatException if {@code string} is not a valid representation
+	 *                               of an IntRational
+	 */
+	public static IntRational valueOf(String string) {
+		String[] parts = string.split("/");
+		switch (parts.length) {
+		case 1:
+			return new IntRational(Integer.valueOf(parts[0]));
+		case 2:
+			return new IntRational(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]));
+		default:
+			throw new NumberFormatException();
+		}
+	}
+}
