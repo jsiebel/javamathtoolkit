@@ -84,11 +84,11 @@ public class Exponentation {
 	 */
 	public static <T extends Ring<T>> T pow(T base, int exponent){
 		if (exponent < 0) {
-			return powPositive(base.invert(), -exponent);
+			return powAbsolute(base.invert(), exponent);
 		}else if (exponent == 0) {
 			return base.divide(base);
 		}else {
-			return powPositive(base, exponent);
+			return powAbsolute(base, exponent);
 		}
 	}
 	
@@ -109,24 +109,24 @@ public class Exponentation {
 	 */
 	public static <T extends Ring<T>> T pow(T base, int exponent, T one){
 		if (exponent < 0) {
-			return powPositive(base.invert(), -exponent);
+			return powAbsolute(base.invert(), exponent);
 		}else if (exponent == 0) {
 			return one;
 		}else {
-			return powPositive(base, exponent);
+			return powAbsolute(base, exponent);
 		}
 	}
 	
 	/**
-	 * Returns the value <code>(base<sup>exponent</sup>)</code> for positive
-	 * exponents.
+	 * Returns the value <code>(base<sup>|exponent|</sup>)</code>. The sign of the
+	 * exponent is ignored.
 	 * 
 	 * @param <T>      the class of the base and the result
 	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation, must be positive
+	 * @param exponent the exponent of the exponentation, must not be zero
 	 * @return <code>base<sup>exponent</sup></code>
 	 */
-	private static <T extends Ring<T>> T powPositive(T base, int exponent){
+	private static <T extends Ring<T>> T powAbsolute(T base, int exponent){
 		T result = null;
 		while (result == null) {
 			if (exponent % 2 != 0) {

@@ -6,6 +6,8 @@ import static jamato.algebra.Exponentation.powMod;
 
 import org.junit.Test;
 
+import jamato.number.IntRational;
+
 public class ExponentationTest {
 
 	@Test
@@ -19,6 +21,8 @@ public class ExponentationTest {
 		assertEquals(-1, pow(-1, Integer.MAX_VALUE));
 		
 		assertEquals(1_000_000_000_000L, pow(100L, 6));
+		
+		assertEquals(IntRational.ONE, pow(IntRational.ONE, Integer.MIN_VALUE, IntRational.ONE));
 	}
 	@Test
 	public void testPowMod() {
