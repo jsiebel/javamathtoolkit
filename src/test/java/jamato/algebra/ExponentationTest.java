@@ -1,10 +1,10 @@
 package jamato.algebra;
 
-import static org.junit.Assert.assertEquals;
 import static jamato.algebra.Exponentation.pow;
 import static jamato.algebra.Exponentation.powMod;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import jamato.number.IntRational;
 

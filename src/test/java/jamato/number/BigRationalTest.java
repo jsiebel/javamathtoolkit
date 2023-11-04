@@ -5,14 +5,14 @@ import static jamato.number.BigRational.NEGATIVE_INFINITY;
 import static jamato.number.BigRational.ONE;
 import static jamato.number.BigRational.POSITIVE_INFINITY;
 import static jamato.number.BigRational.ZERO;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
 import java.math.RoundingMode;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class BigRationalTest {
 	
@@ -43,7 +43,7 @@ public class BigRationalTest {
 		
 		assertEquals(new BigRational(1, 1_000_000_000), new BigRational(1e-9));
 		
-		assertEquals(new BigRational(4503599627370497l, 4503599627370496l), new BigRational(Math.nextUp(1d)));
+		assertEquals(new BigRational(4503599627370497L, 4503599627370496L), new BigRational(Math.nextUp(1d)));
 		assertEquals(new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1074)), new BigRational(Double.MIN_VALUE));
 		assertEquals(new BigRational(BigInteger.ONE.negate(), BigInteger.TWO.pow(1074)), new BigRational(-Double.MIN_VALUE));
 		assertEquals(new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1022)), new BigRational(Double.MIN_NORMAL));
@@ -53,11 +53,11 @@ public class BigRationalTest {
 				BigInteger.TWO.pow(150)),
 				new BigRational(Math.pow(2, 150)));
 		assertEquals(
-				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(160)), 
+				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(160)),
 				new BigRational(Math.pow(0.5, 160)));
 		
 		assertEquals(
-				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(180).multiply(BigInteger.valueOf(3))), 
+				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(180).multiply(BigInteger.valueOf(3))),
 				new BigRational(Math.pow(0.5, 180) / 3));
 		
 		assertEquals(
