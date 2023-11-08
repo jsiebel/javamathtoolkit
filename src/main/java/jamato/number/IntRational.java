@@ -86,7 +86,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 */
 	protected IntRational(long nominator, long denominator) {
 		if (denominator == 0) {
-			this.nominator = (int) Long.signum(nominator);
+			this.nominator = Long.signum(nominator);
 			this.denominator = 0;
 		}else if (nominator == 0) {
 			this.nominator = 0;
@@ -213,48 +213,59 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			return NAN;
 		}
 	}
-
+	
 	/**
 	 * Returns an IntRational with the value {@code (this + summand)}.
+	 * 
 	 * @param summand value to be added to this IntRational
 	 * @return {@code (this + summand)}
 	 */
 	public IntRational add(int summand) {
-		return new IntRational(nominator + (long)denominator * summand, denominator);
+		if (isFinite()) {
+			return new IntRational(nominator + (long) denominator * summand, denominator);
+		} else {
+			return this;
+		}
 	}
 	
 	@Override
 	public IntRational subtract(IntRational subtrahend) {
 		if (isFinite() && subtrahend.isFinite()) {
-			long resultNominator = (long)nominator * subtrahend.denominator - (long)subtrahend.nominator * denominator;
-			long resultDenominator = (long)denominator * subtrahend.denominator;
+			long resultNominator = (long) nominator * subtrahend.denominator
+					- (long) subtrahend.nominator * denominator;
+			long resultDenominator = (long) denominator * subtrahend.denominator;
 			long gcd = GCD.of(resultNominator, resultDenominator);
 			return new IntRational(resultNominator / gcd, resultDenominator / gcd);
-		}else if (isFinite()){
+		} else if (isFinite()) {
 			return subtrahend.negate();
-		}else if (subtrahend.isFinite()) {
+		} else if (subtrahend.isFinite()) {
 			return this;
-		}else if (nominator == -subtrahend.nominator){
+		} else if (nominator == -subtrahend.nominator) {
 			return this;
-		}else {
+		} else {
 			return NAN;
 		}
 	}
-
+	
 	/**
 	 * Returns an IntRational with the value {@code (this - subtrahend)}.
+	 * 
 	 * @param subtrahend value to be subtracted from this IntRational
 	 * @return {@code (this - subtrahend)}
 	 */
 	public IntRational subtract(int subtrahend) {
-		return new IntRational(nominator - (long)denominator * subtrahend, denominator);
+		if (isFinite()) {
+			return new IntRational(nominator - (long) denominator * subtrahend, denominator);
+		} else {
+			return this;
+		}
 	}
 	
 	@Override
 	public IntRational invert() {
 		return new IntRational(denominator, nominator, 1);
 	}
-
+	
 	@Override
 	public boolean isOne() {
 		return equals(ONE);
@@ -262,14 +273,16 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	
 	@Override
 	public IntRational multiply(IntRational factor) {
-		if (isFinite() && factor.isFinite()) {
+		if (!isFinite() || !factor.isFinite()) {
+			return getNonFiniteValueBySign(Integer.signum(nominator) * factor.signum());
+		} else if (isZero() || factor.isZero()) {
+			return ZERO;
+		} else {
 			int gcd1 = GCD.of(nominator, factor.denominator);
 			int gcd2 = GCD.of(factor.nominator, denominator);
 			return new IntRational(
-					nominator / gcd1 * (long)(factor.nominator / gcd2),
-					denominator / gcd2 * (long)(factor.denominator / gcd1));
-		}else {
-			return new IntRational(Integer.signum(nominator) * Integer.signum(factor.nominator), 0);
+					(long) nominator / gcd1 * factor.nominator / gcd2,
+					(long) denominator / gcd2 * factor.denominator / gcd1);
 		}
 	}
 	
@@ -280,8 +293,14 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 * @return {@code (this * factor)}
 	 */
 	public IntRational multiply(int factor) {
-		int gcd = GCD.of(denominator, factor);
-		return new IntRational((long)nominator * (factor / gcd), denominator / gcd);
+		if (!isFinite()) {
+			return getNonFiniteValueBySign(signum() * Integer.signum(factor));
+		} else if (isZero() || factor == 0) {
+			return ZERO;
+		} else {
+			int gcd = GCD.of(denominator, factor);
+			return new IntRational((long) nominator * (factor / gcd), denominator / gcd);
+		}
 	}
 	
 	/**
@@ -292,15 +311,19 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 */
 	@Override
 	public IntRational divide(IntRational divisor) {
-		if (!isFinite() && !divisor.isFinite() || isNaN() || divisor.isNaN()) {
-			return NAN;
+		if (divisor.isZero()) {
+			return getNonFiniteValueBySign(nominator);
+		} else if (!isFinite() || divisor.isNaN()) {
+			int invertedDivisorSignum = divisor.isFinite() ? divisor.signum() : 0;
+			return getNonFiniteValueBySign(Integer.signum(nominator) * invertedDivisorSignum);
+		} else if (isZero() || !divisor.isFinite()) {
+			return ZERO;
 		} else {
 			int gcd1 = GCD.of(nominator, divisor.nominator);
 			int gcd2 = GCD.of(divisor.denominator, denominator);
 			return new IntRational(
-					nominator / gcd1 * (divisor.denominator / gcd2),
-					denominator / gcd2 * (divisor.nominator / gcd1),
-					1);
+					(long) nominator / gcd1 * divisor.denominator / gcd2,
+					(long) denominator / gcd2 * divisor.nominator / gcd1);
 		}
 	}
 	
@@ -314,34 +337,34 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	public IntRational divide(long divisor) {
 		if (isFinite()) {
 			long gcd = GCD.of(nominator, divisor);
-			return new IntRational(nominator / gcd, (long)denominator * (divisor / gcd));
-		}else {
-			return new IntRational(Integer.signum(nominator) * (int)Long.signum(divisor), 0, 1);
+			return new IntRational(nominator / gcd, denominator * (divisor / gcd));
+		} else {
+			return getNonFiniteValueBySign(Integer.signum(nominator) * Long.signum(divisor));
 		}
 	}
 	
-    /**
-     * Returns the signum function of this.
-     *
-     * @return -1, 0 or 1 as the value of this is negative, zero/NaN or
-     *         positive.
-     */
+	/**
+	 * Returns the signum function of this.
+	 *
+	 * @return -1, 0 or 1 as the value of this is negative, zero/NaN or positive.
+	 */
 	public int signum() {
 		return Integer.signum(nominator);
 	}
-
+	
 	/**
 	 * Returns the absolute value of this.
+	 * 
 	 * @return {@code (|this|)}
 	 */
 	public IntRational absolute() {
 		if (nominator < 0) {
 			return negate();
-		}else {
+		} else {
 			return this;
 		}
 	}
-
+	
 	/**
 	 * Rounds this number towards negative infinity.
 	 * <p>
@@ -357,7 +380,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	public int floor() {
 		return round(RoundingMode.FLOOR);
 	}
-
+	
 	/**
 	 * Rounds this number towards positive infinity.
 	 * <p>
@@ -373,10 +396,9 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	public int ceil() {
 		return round(RoundingMode.CEILING);
 	}
-
+	
 	/**
-	 * Rounds this number to the next integer, or away from zero if the two neighbor
-	 * integers have the same distance.
+	 * Rounds this number to the next integer, or away from zero if the two neighbor integers have the same distance.
 	 * <p>
 	 * Special cases:
 	 * <ul>
@@ -403,9 +425,8 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 * 
 	 * @param roundingMode a {@link RoundingMode}
 	 * @return the rounded number
-	 * @throws ArithmeticException if {@code roundingMode} is
-	 *                             {@link RoundingMode#UNNECESSARY} and this number
-	 *                             is not an integer.
+	 * @throws ArithmeticException if {@code roundingMode} is {@link RoundingMode#UNNECESSARY} and this number is not an
+	 * integer.
 	 */
 	public int round(RoundingMode roundingMode) {
 		if (isInteger()) {
@@ -453,32 +474,30 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 		}
 		return quotient;
 	}
-
-    /**
-     * Returns {@code true} if this is IntRational finite; returns {@code false} otherwise (for NaN and infinity).
-     *
-     * @return {@code true} if the argument is a finite, {@code false} otherwise
-     */
+	
+	/**
+	 * Returns {@code true} if this is IntRational finite; returns {@code false} otherwise (for NaN and infinity).
+	 *
+	 * @return {@code true} if the argument is a finite, {@code false} otherwise
+	 */
 	public boolean isFinite() {
 		return denominator != 0;
 	}
-
+	
 	/**
 	 * Returns {@code true} if this is {@link #NAN}, {@code false} otherwise.
 	 *
-	 * @return {@code true} if this is NaN; {@code false}
-	 *         otherwise.
+	 * @return {@code true} if this is NaN; {@code false} otherwise.
 	 */
 	
 	public boolean isNaN() {
 		return equals(NAN);
 	}
-
+	
 	/**
 	 * Returns {@code true} if this is an integer, {@code false} otherwise.
 	 *
-	 * @return {@code true} if this is an integer; {@code false}
-	 *         otherwise.
+	 * @return {@code true} if this is an integer; {@code false} otherwise.
 	 */
 	public boolean isInteger() {
 		return denominator == 1;
@@ -525,13 +544,13 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	public long longValue() {
 		return intValue();
 	}
-
+	
 	@Override
 	public int compareTo(IntRational o) {
 		if (this.equals(o)) {
 			return 0;
 		} else if (isFinite() && o.isFinite()) {
-			return Long.compare((long)nominator*o.denominator, (long)denominator*o.nominator);
+			return Long.compare((long) nominator * o.denominator, (long) denominator * o.nominator);
 		} else if (isNaN()) {
 			return 1;
 		} else if (o.isNaN()) {
@@ -543,16 +562,14 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 		}
 	}
 	
-    /**
-	 * Translates the decimal String representation of an IntRational into an
-	 * IntRational. The String representation consists of either two decimal numbers
-	 * separated by a slash ("/"), or a single decimal number. Whitespace is not
+	/**
+	 * Translates the decimal String representation of an IntRational into an IntRational. The String representation
+	 * consists of either two decimal numbers separated by a slash ("/"), or a single decimal number. Whitespace is not
 	 * allowed.
 	 *
 	 * @param string the decimal String representation of an IntRational
-     * @return an IntRational with the specified value
-	 * @throws NumberFormatException if {@code string} is not a valid representation
-	 *                               of an IntRational
+	 * @return an IntRational with the specified value
+	 * @throws NumberFormatException if {@code string} is not a valid representation of an IntRational
 	 */
 	public static IntRational valueOf(String string) {
 		String[] parts = string.split("/");
@@ -563,6 +580,24 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			return new IntRational(Integer.valueOf(parts[0]), Integer.valueOf(parts[1]));
 		default:
 			throw new NumberFormatException();
+		}
+	}
+
+	
+	/**
+	 * Returns an non-finite value with the same sign as the argument: {@link #NEGATIVE_INFINITY}, {@link #NAN} or
+	 * {@link #POSITIVE_INFINITY} for a negative, zero or positive argument.
+	 * 
+	 * @param signum a number
+	 * @return a non-finite value with the argument's sign
+	 */
+	private static IntRational getNonFiniteValueBySign(int signum) {
+		if (signum < 0) {
+			return NEGATIVE_INFINITY;
+		} else if (signum == 0) {
+			return NAN;
+		} else {
+			return POSITIVE_INFINITY;
 		}
 	}
 }
