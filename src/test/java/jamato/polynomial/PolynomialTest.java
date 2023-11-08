@@ -1,291 +1,292 @@
 package jamato.polynomial;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import jamato.number.IntRational;
 
-public class PolynomialTest {
-
-	final IntRational FOUR = new IntRational(4);
-	final IntRational TWO = new IntRational(2);
-	final IntRational ONE = new IntRational(1);
-	final IntRational HALF = new IntRational(1, 2);
-	final IntRational ZERO = new IntRational(0);
+class PolynomialTest {
 	
-	@Test
-	public void testIntConstructor() {
-		Polynomial<IntRational> polynomial1 = valueOf(ZERO);
-		assertEquals(0, polynomial1.getDegree());
-		assertEquals(ZERO, polynomial1.getCoefficient(0));
-		assertEquals(ZERO, polynomial1.getCoefficient(1));
-		
-		Polynomial<IntRational> polynomial2 = valueOf(ONE, TWO, FOUR);
-		assertEquals(2, polynomial2.getDegree());
-		assertEquals(ONE, polynomial2.getCoefficient(0));
-		assertEquals(TWO, polynomial2.getCoefficient(1));
-		assertEquals(FOUR, polynomial2.getCoefficient(2));
-		assertEquals(ZERO, polynomial2.getCoefficient(3));
-
-		Polynomial<IntRational> polynomial3 = valueOf(ONE, TWO, FOUR, ZERO, ZERO);
-		assertEquals(2, polynomial3.getDegree());
-
-		Polynomial<IntRational> polynomial4 = valueOf(ONE, ZERO);
-		assertEquals(0, polynomial4.getDegree());
-
-		Polynomial<IntRational> polynomial5 = valueOf(ZERO, ZERO);
-		assertEquals(polynomial1, polynomial5);
+	static final IntRational FOUR = new IntRational(4);
+	
+	static final IntRational TWO = new IntRational(2);
+	
+	static final IntRational ONE = new IntRational(1);
+	
+	static final IntRational HALF = new IntRational(1, 2);
+	
+	static final IntRational ZERO = new IntRational(0);
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIntConstructor(IntRational[] coefficients, int resultDegree, IntRational[] resultCoefficients) {
+		Polynomial<IntRational> intRationalPolynomial = valueOf(coefficients);
+		assertEquals(resultDegree, intRationalPolynomial.getDegree());
+		for (int i = 0; i < resultCoefficients.length; i++) {
+			assertEquals(resultCoefficients[i], intRationalPolynomial.getCoefficient(i));
+		}
 	}
 	
-	@Test
-	public void testIntRationalConstructor() {
-		Polynomial<IntRational> polynomial1 = valueOf(ZERO);
-		assertEquals(0, polynomial1.getDegree());
-		
-		Polynomial<IntRational> polynomial2 = valueOf(ZERO, HALF);
-		assertEquals(1, polynomial2.getDegree());
-		
-		Polynomial<IntRational> polynomial3 = valueOf(ZERO, ZERO);
-		assertEquals(0, polynomial3.getDegree());
-		
-		Polynomial<IntRational> polynomial4 = valueOf(ZERO, FOUR, HALF, HALF);
-		assertEquals(3, polynomial4.getDegree());
+	static Stream<Arguments> testIntConstructor() {
+		return Stream.of(
+				Arguments.of(new IntRational[] { ZERO }, 0, new IntRational[] { ZERO, ZERO }),
+				Arguments.of(new IntRational[] { ONE, TWO, FOUR }, 2, new IntRational[] { ONE, TWO, FOUR, ZERO }),
+				Arguments.of(
+						new IntRational[] { ONE, TWO, FOUR, ZERO, ZERO },
+						2,
+						new IntRational[] { ONE, TWO, FOUR, ZERO }),
+				Arguments.of(new IntRational[] { ONE, ZERO }, 0, new IntRational[] { ONE, ZERO }),
+				Arguments.of(new IntRational[] { ZERO, ZERO }, 0, new IntRational[] { ZERO }),
+				Arguments.of(new IntRational[] { ZERO, HALF }, 1, new IntRational[] { ZERO, HALF, ZERO }));
 	}
 	
-	@Test
-	public void testStringConstructor() {
-		assertEquals(valueOf(new IntRational(-2, 37)), valueOf("-2/37"));
-		assertEquals(valueOf(ONE, new IntRational(-2)), valueOf("-2x+1"));
-		assertEquals(valueOf(new IntRational(-3), ZERO, new IntRational(5)), valueOf("5x^2-3"));
-		assertEquals(valueOf(HALF, ZERO, FOUR, HALF), valueOf("1/2A³+1/2+4x²"));
-		assertEquals(valueOf(ZERO), valueOf("-1/2 t² + 1/3 t^2 + 0 + 1/6 t² + 0t^15"));
+	@ParameterizedTest
+	@MethodSource
+	void testStringConstructor(String string, Polynomial<IntRational> polynomial) {
+		assertEquals(polynomial, valueOf(string));
 	}
 	
-	@Test
-	public void testIsZero() {
-		assertTrue(valueOf("0").isZero());
-		assertFalse(valueOf("-28").isZero());
-		assertFalse(valueOf("-227x").isZero());
+	static Stream<Arguments> testStringConstructor() {
+		return Stream.of(
+				Arguments.of("-2/37", valueOf(new IntRational(-2, 37))),
+				Arguments.of("-2x+1", valueOf(ONE, new IntRational(-2))),
+				Arguments.of("5x^2-3", valueOf(new IntRational(-3), ZERO, new IntRational(5))),
+				Arguments.of("1/2A³+1/2+4x²", valueOf(HALF, ZERO, FOUR, HALF)),
+				Arguments.of("-1/2 t² + 1/3 t^2 + 0 + 1/6 t² + 0t^15", valueOf(ZERO)));
 	}
 	
-	@Test
-	public void testNegate() {
-		assertEquals(valueOf("0"), valueOf("0").negate());
-		assertEquals(valueOf("52x³-x+12"), valueOf("-52x³+x-12").negate());
+	@ParameterizedTest
+	@MethodSource
+	void testIsZero(Polynomial<IntRational> doublePolynomial, boolean result) {
+		assertEquals(result, doublePolynomial.isZero());
 	}
 	
-	@Test
-	public void testAdd() {
-		assertEquals(
-				valueOf("6"),
-				valueOf("2x+4").add(valueOf("-2x+2"))
-				);
-		assertEquals(
-				valueOf(ONE),
-				valueOf(HALF).add(valueOf(HALF))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("4x²+3x+2").add(valueOf("-4x²-3x-2"))
-				);
-		assertEquals(
-				valueOf("3x²+7x+5"),
-				valueOf("3x²+2x+1").add(valueOf("5x+4"))
-				);
-		assertEquals(
-				valueOf("5x+5"),
-				valueOf(ONE).add(valueOf("5x+4"))
-				);
+	static Stream<Arguments> testIsZero() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), true),
+				Arguments.of(valueOf("-28"), false),
+				Arguments.of(valueOf("-227x"), false));
 	}
 	
-	@Test
-	public void testSubtract() {
-		assertEquals(
-				valueOf("4x+2"),
-				valueOf("2x+4").subtract(valueOf("-2x+2"))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf(HALF).subtract(valueOf(HALF))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("4x²+3x+2").subtract(valueOf("4x²+3x+2"))
-				);
-		assertEquals(
-				valueOf("3x²-3x-3"),
-				valueOf("3x²+2x+1").subtract(valueOf("5x+4"))
-				);
-		assertEquals(
-				valueOf("-5x-3"),
-				valueOf(ONE).subtract(valueOf("5x+4"))
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testNegate(Polynomial<IntRational> doublePolynomial, Polynomial<IntRational> result) {
+		assertEquals(result, doublePolynomial.negate());
 	}
 	
-	@Test
-	public void testIsOne() {
-		assertTrue(valueOf("1").isOne());
-		assertFalse(valueOf("-1").isOne());
-		assertFalse(valueOf("x+1").isOne());
+	static Stream<Arguments> testNegate() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), valueOf("0")),
+				Arguments.of(valueOf("-52x³+x-12"), valueOf("52x³-x+12")));
 	}
 	
-	@Test
-	public void testMultiply() {
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("4x³+3x²+2x+1").multiply(valueOf("0x+0"))
-				);
-		assertEquals(
-				valueOf(HALF, ONE, HALF),
-				valueOf(HALF, HALF).multiply(valueOf(ONE, ONE))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("5x^4+4x³+3x²+2x+1").multiply(ZERO)
-				);
-		assertEquals(
-				valueOf(HALF, ONE, HALF, ONE),
-				valueOf(ONE, TWO, ONE, TWO).multiply(new IntRational(1, 2))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("6x^5+5x^4+4x³+3x²+2x+1").multiply(0)
-				);
-		assertEquals(
-				valueOf("-1200x³-1000x²-800x-600"),
-				valueOf("6x³+5x²+4x+3").multiply(-200)
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testAdd(Polynomial<IntRational> summand1, Polynomial<IntRational> summand2, Polynomial<IntRational> result) {
+		assertEquals(result, summand1.add(summand2));
 	}
 	
-	@Test
-	public void testDivide() {
-		assertEquals(
-				valueOf("10x³+10x²+20x+10"),
-				valueOf("120x³+120x²+240x+120").divide(12L)
-				);
-		assertEquals(
-				valueOf("10x³+10x²+20x+10"),
-				valueOf("110x³+110x²+220x+110").divide(new IntRational(11))
-				);
-		assertEquals(
-				valueOf("8x³+6x²+4x+2"),
-				valueOf("4x³+3x²+2x+1").divide(valueOf(HALF))
-				);
-		assertEquals(
-				valueOf("0"),
-				valueOf("0").divide(valueOf("x^4+5x³+6x²+2"))
-				);
-		assertEquals(
-				valueOf("x+1"),
-				valueOf("x²+2x+1").divide(valueOf("x+1"))
-				);
-		assertEquals(
-				valueOf(ZERO),
-				valueOf("5x³+9x²+7x+3").divide(valueOf("x^4+5x³+6x²+2"))
-				);
+	static Stream<Arguments> testAdd() {
+		return Stream.of(
+				Arguments.of(valueOf("2x+4"), valueOf("-2x+2"), valueOf("6")),
+				Arguments.of(valueOf(HALF), valueOf(HALF), valueOf(ONE)),
+				Arguments.of(valueOf("4x²+3x+2"), valueOf("-4x²-3x-2"), valueOf(ZERO)),
+				Arguments.of(valueOf("3x²+2x+1"), valueOf("5x+4"), valueOf("3x²+7x+5")),
+				Arguments.of(valueOf(ONE), valueOf("5x+4"), valueOf("5x+5")));
 	}
 	
-	@Test
-	public void testSubstitute() {
-		assertEquals(
-				valueOf("x+2"),
-				valueOf("x+1").substitute(valueOf("x+1"))
-				);
-		
-		// (2x+1/2)² + 2(2x+1/2) + 4 = 4x² + 6x + 21/4
-		assertEquals(
-				valueOf("4x²+6x+21/4"),
-				valueOf("x²+2x+4").substitute(valueOf(HALF, TWO))
-				);
-		
-		assertEquals(
-				valueOf("3"),
-				valueOf("3").substitute(valueOf("34/4x^33-2910x^14"))
-				);
-		
-		assertEquals(
-				valueOf("97"),
-				valueOf("35/4x^4+1/1000x^2+97").substitute(valueOf(ZERO))
-				);
-		
-		assertEquals(
-				valueOf("40"),
-				valueOf("10x^5+57/2x+3/2").substitute(valueOf(ONE))
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testSubtract(Polynomial<IntRational> minuend, Polynomial<IntRational> subtrahend,
+			Polynomial<IntRational> result) {
+		assertEquals(result, minuend.subtract(subtrahend));
 	}
 	
-	@Test
-	public void testPow() {
-		assertEquals(
-				valueOf("1"),
-				valueOf("x³+6x²+12x+8").pow(0)
-				);
-		assertEquals(
-				valueOf("-1"),
-				valueOf("-1").pow(Integer.MAX_VALUE)
-				);
-		assertEquals(
-				valueOf("x³+6x²+12x+8"),
-				valueOf("x+2").pow(3)
-				);
+	static Stream<Arguments> testSubtract() {
+		return Stream.of(
+				Arguments.of(valueOf("2x+4"), valueOf("-2x+2"), valueOf("4x+2")),
+				Arguments.of(valueOf(HALF), valueOf(HALF), valueOf(ZERO)),
+				Arguments.of(valueOf("4x²+3x+2"), valueOf("4x²+3x+2"), valueOf(ZERO)),
+				Arguments.of(valueOf("3x²+2x+1"), valueOf("5x+4"), valueOf("3x²-3x-3")),
+				Arguments.of(valueOf(ONE), valueOf("5x+4"), valueOf("-5x-3")));
 	}
 	
-	@Test
-	public void testDerivative() {
-		assertEquals(
-				valueOf("0"),
-				valueOf("0").derivative()
-				);
-		assertEquals(
-				valueOf("0"),
-				valueOf("1/13").derivative()
-				);
-		assertEquals(
-				valueOf("15x^9+4x+15"),
-				valueOf("3/2x^10+2x²+15x+1/7").derivative()
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testIsOne(Polynomial<IntRational> doublePolynomial, boolean result) {
+		assertEquals(result, doublePolynomial.isOne());
 	}
 	
-	@Test
-	public void testApply() {
-		assertEquals(
-				ZERO,
-				valueOf("33x³").apply(ZERO)
-				);
-		assertEquals(
-				new IntRational(-1),
-				valueOf("2/5x^3-7/5").apply(ONE)
-				);
-		assertEquals(
-				new IntRational(3333),
-				valueOf("3x³+3x²+3x+3").apply(new IntRational(10))
-				);
+	static Stream<Arguments> testIsOne() {
+		return Stream.of(
+				Arguments.of(valueOf("1"), true),
+				Arguments.of(valueOf("-1"), false),
+				Arguments.of(valueOf("x+1"), false));
 	}
 	
-	@Test
-	public void testToString() {
-		assertEquals("0", valueOf("0").toString());
-		assertEquals("1/2", valueOf("1/2").toString());
-		assertEquals("-1", valueOf("-1").toString());
-		assertEquals("x", valueOf("x").toString());
-		assertEquals("x + 1", valueOf("x+1").toString());
-		assertEquals("x - 2", valueOf("-2+x").toString());
-		assertEquals("-x + 3", valueOf("3-x").toString());
-		assertEquals("-x - 4", valueOf("-x-4").toString());
-		assertEquals("2 x² - 1", valueOf("-1+2x^2").toString());
-		assertEquals("-6 x^5 + 5 x^4 - 4 x³ + x² - x + 1", valueOf("-6 x^5 + 5 x^4 - 4 x³ + x² - x + 1").toString());
+	@ParameterizedTest
+	@MethodSource
+	void testMultiply(Polynomial<IntRational> factor1, Polynomial<IntRational> factor2,
+			Polynomial<IntRational> result) {
+		assertEquals(result, factor1.multiply(factor2));
 	}
 	
-	private static Polynomial<IntRational> valueOf(IntRational... coefficients){
+	static Stream<Arguments> testMultiply() {
+		return Stream.of(
+				Arguments.of(valueOf("4x³+3x²+2x+1"), valueOf("0x+0"), valueOf(ZERO)),
+				Arguments.of(valueOf(HALF, HALF), valueOf(ONE, ONE), valueOf(HALF, ONE, HALF)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiplyByBaseType(Polynomial<IntRational> factor1, IntRational factor2, Polynomial<IntRational> result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiplyByBaseType() {
+		return Stream.of(
+				Arguments.of(valueOf("5x^4+4x³+3x²+2x+1"), ZERO, valueOf(ZERO)),
+				Arguments.of(valueOf(ONE, TWO, ONE, TWO), new IntRational(1, 2), valueOf(HALF, ONE, HALF, ONE)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiplyByLong(Polynomial<IntRational> factor1, long factor2, Polynomial<IntRational> result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiplyByLong() {
+		return Stream.of(
+				Arguments.of(valueOf("6x^5+5x^4+4x³+3x²+2x+1"), 0, valueOf(ZERO)),
+				Arguments.of(valueOf("6x³+5x²+4x+3"), -200, valueOf("-1200x³-1000x²-800x-600")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivide(Polynomial<IntRational> dividend, Polynomial<IntRational> divisor, Polynomial<IntRational> result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivide() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), valueOf("x^4+5x³+6x²+2"), valueOf("0")),
+				Arguments.of(valueOf("4x³+3x²+2x+1"), valueOf(HALF), valueOf("8x³+6x²+4x+2")),
+				Arguments.of(valueOf("x²+2x+1"), valueOf("x+1"), valueOf("x+1")),
+				Arguments.of(valueOf("5x³+9x²+7x+3"), valueOf("x^4+5x³+6x²+2"), valueOf(ZERO)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivideByBaseType(Polynomial<IntRational> dividend, IntRational divisor, Polynomial<IntRational> result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivideByBaseType() {
+		return Stream.of(
+				Arguments.of(valueOf("110x³+110x²+220x+110"), new IntRational(11), valueOf("10x³+10x²+20x+10")),
+				Arguments.of(valueOf("4x³+3x²+2x+1"), HALF, valueOf("8x³+6x²+4x+2")),
+				Arguments.of(valueOf("120x³+120x²+240x+120"), new IntRational(12L), valueOf("10x³+10x²+20x+10")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivideByLong(Polynomial<IntRational> dividend, long divisor, Polynomial<IntRational> result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivideByLong() {
+		return Stream.of(
+				Arguments.of(valueOf("110x³+110x²+220x+110"), 11, valueOf("10x³+10x²+20x+10")),
+				Arguments.of(valueOf("120x³+120x²+240x+120"), 12, valueOf("10x³+10x²+20x+10")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSubstitute(Polynomial<IntRational> doublePolynomial, Polynomial<IntRational> substituent,
+			Polynomial<IntRational> result) {
+		assertEquals(result, doublePolynomial.substitute(substituent));
+	}
+	
+	static Stream<Arguments> testSubstitute() {
+		return Stream.of(
+				Arguments.of(valueOf("x+1"), valueOf("x+1"), valueOf("x+2")),
+				// (2x+1/2)² + 2(2x+1/2) + 4 = 4x² + 6x + 21/4
+				Arguments.of(valueOf("x²+2x+4"), valueOf(HALF, TWO), valueOf("4x²+6x+21/4")),
+				Arguments.of(valueOf("3"), valueOf("34/4x^33-2910x^14"), valueOf("3")),
+				Arguments.of(valueOf("35/4x^4+1/1000x^2+97"), valueOf(ZERO), valueOf("97")),
+				Arguments.of(valueOf("10x^5+57/2x+3/2"), valueOf(ONE), valueOf("40")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testPow(Polynomial<IntRational> base, int exponent, Polynomial<IntRational> result) {
+		assertEquals(result, base.pow(exponent));
+	}
+	
+	static Stream<Arguments> testPow() {
+		return Stream.of(
+				Arguments.of(valueOf("x³+6x²+12x+8"), 0, valueOf("1")),
+				Arguments.of(valueOf("-1"), Integer.MAX_VALUE, valueOf("-1")),
+				Arguments.of(valueOf("x+2"), 3, valueOf("x³+6x²+12x+8")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDerivative(Polynomial<IntRational> doublePolynomial, Polynomial<IntRational> result) {
+		assertEquals(result, doublePolynomial.derivative());
+	}
+	
+	static Stream<Arguments> testDerivative() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), valueOf("0")),
+				Arguments.of(valueOf("1/13"), valueOf("0")),
+				Arguments.of(valueOf("3/2x^10+2x²+15x+1/7"), valueOf("15x^9+4x+15")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testApply(Polynomial<IntRational> doublePolynomial, IntRational x, IntRational result) {
+		assertEquals(result, doublePolynomial.apply(x));
+	}
+	
+	static Stream<Arguments> testApply() {
+		return Stream.of(
+				Arguments.of(valueOf("33x³"), ZERO, ZERO),
+				Arguments.of(valueOf("2/5x^3-7/5"), ONE, new IntRational(-1)),
+				Arguments.of(valueOf("3x³+3x²+3x+3"), new IntRational(10), new IntRational(3333)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testToString(Polynomial<IntRational> doublePolynomial, String result) {
+		assertEquals(result, doublePolynomial.toString());
+	}
+	
+	static Stream<Arguments> testToString() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), "0"),
+				Arguments.of(valueOf("1/2"), "1/2"),
+				Arguments.of(valueOf("-1"), "-1"),
+				Arguments.of(valueOf("x"), "x"),
+				Arguments.of(valueOf("x+1"), "x + 1"),
+				Arguments.of(valueOf("-2+x"), "x - 2"),
+				Arguments.of(valueOf("3-x"), "-x + 3"),
+				Arguments.of(valueOf("-x-4"), "-x - 4"),
+				Arguments.of(valueOf("-1+2x^2"), "2 x² - 1"),
+				Arguments.of(valueOf("-6 x^5 + 5 x^4 - 4 x³ + x² - x + 1"), "-6 x^5 + 5 x^4 - 4 x³ + x² - x + 1"));
+	}
+	
+	private static Polynomial<IntRational> valueOf(IntRational... coefficients) {
 		return new Polynomial<>(List.of(coefficients));
 	}
 	
-	private static Polynomial<IntRational> valueOf(String s){
+	private static Polynomial<IntRational> valueOf(String s) {
 		return Polynomial.valueOf(s, IntRational::valueOf, IntRational.ZERO, IntRational.ONE);
 	}
 }

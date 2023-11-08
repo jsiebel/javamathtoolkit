@@ -6,277 +6,455 @@ import static jamato.number.IntRational.ONE;
 import static jamato.number.IntRational.POSITIVE_INFINITY;
 import static jamato.number.IntRational.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.RoundingMode;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-public class IntRationalTest {
+class IntRationalTest {
 	
-	@Test
-	public void testDoubleConstructor() {
-		assertEquals(new IntRational(0, 1), new IntRational(0.0));
-		assertEquals(new IntRational(1, 1), new IntRational(1.0));
-		assertEquals(new IntRational(1234, 1), new IntRational(1234.0));
-		
-		assertEquals(new IntRational(43, 20), new IntRational(2.15));
-		assertEquals(new IntRational(-43, 20), new IntRational(-2.15));
-		assertEquals(Math.PI, new IntRational(Math.PI).doubleValue(), 1e-9);
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleConstructor(double value, IntRational result) {
+		assertEquals(result, new IntRational(value));
+	}
+	
+	static Stream<Arguments> testDoubleConstructor() {
+		return Stream.of(
+				Arguments.of(0.0, new IntRational(0, 1)),
+				Arguments.of(1.0, new IntRational(1, 1)),
+				Arguments.of(1234.0, new IntRational(1234, 1)),
+				
+				Arguments.of(2.15, new IntRational(43, 20)),
+				Arguments.of(-2.15, new IntRational(-43, 20)),
+				
+				Arguments.of(1e-9, new IntRational(1, 1_000_000_000)),
+				Arguments.of(1e-10, new IntRational(0, 1)),
+				
+				Arguments.of(Integer.MAX_VALUE, new IntRational(Integer.MAX_VALUE, 1)),
+				Arguments.of(0.5 * Integer.MAX_VALUE, new IntRational(Integer.MAX_VALUE, 2)),
+				Arguments.of(0.5 * Integer.MAX_VALUE + 0.5, new IntRational(Integer.MAX_VALUE / 2 + 1, 1)),
+				Arguments.of(0.5 * Integer.MAX_VALUE + 0.6, new IntRational(Integer.MAX_VALUE / 2 + 1, 1)),
+				Arguments.of(1e10, new IntRational(Integer.MAX_VALUE, 1)),
+				
+				Arguments.of(Integer.MIN_VALUE, new IntRational(Integer.MIN_VALUE, 1)),
+				Arguments.of(0.5 * Integer.MIN_VALUE, new IntRational(Integer.MIN_VALUE / 2, 1)),
+				Arguments.of(0.5 * Integer.MIN_VALUE + 0.5, new IntRational(Integer.MIN_VALUE + 1, 2)),
+				Arguments.of(0.5 * Integer.MIN_VALUE + 0.6, new IntRational(Integer.MIN_VALUE + 1, 2)),
+				Arguments.of(Integer.MIN_VALUE, new IntRational(Integer.MIN_VALUE, 1)),
+				
+				Arguments.of(Double.NaN, NAN),
+				Arguments.of(Double.POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(Double.NEGATIVE_INFINITY, NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleConstructorByDoubleValue(double value, double result) {
+		assertEquals(result, new IntRational(value).doubleValue(), 1e-9);
+	}
+	
+	static Stream<Arguments> testDoubleConstructorByDoubleValue() {
 		double phi = Math.sqrt(5) / 2 + 0.5;
-		assertEquals(phi, new IntRational(phi).doubleValue(), 1e-9);
-		assertEquals(1/phi, new IntRational(1/phi).doubleValue(), 1e-9);
-		
-
-		assertEquals(new IntRational(1, 1_000_000_000), new IntRational(1e-9));
-		assertEquals(new IntRational(0, 1), new IntRational(1e-10));
-		
-		assertEquals(new IntRational(Integer.MAX_VALUE, 1), new IntRational((double) Integer.MAX_VALUE));
-		assertEquals(new IntRational(Integer.MAX_VALUE, 2), new IntRational(0.5*Integer.MAX_VALUE));
-		assertEquals(new IntRational(Integer.MAX_VALUE/2+1, 1), new IntRational(0.5*Integer.MAX_VALUE + 0.5));
-		assertEquals(new IntRational(Integer.MAX_VALUE/2+1, 1), new IntRational(0.5*Integer.MAX_VALUE + 0.6));
-		assertEquals(new IntRational(Integer.MAX_VALUE, 1), new IntRational(1e10));
-
-		assertEquals(new IntRational(Integer.MIN_VALUE, 1), new IntRational((double) Integer.MIN_VALUE));
-		assertEquals(new IntRational(Integer.MIN_VALUE/2, 1), new IntRational(0.5 * Integer.MIN_VALUE));
-		assertEquals(new IntRational(Integer.MIN_VALUE+1, 2), new IntRational(0.5 * Integer.MIN_VALUE + 0.5));
-		assertEquals(new IntRational(Integer.MIN_VALUE+1, 2), new IntRational(0.5 * Integer.MIN_VALUE + 0.6));
-		assertEquals(new IntRational(Integer.MIN_VALUE, 1), new IntRational((double) Integer.MIN_VALUE));
-
-		assertEquals(NAN, new IntRational(Double.NaN));
-		assertEquals(POSITIVE_INFINITY, new IntRational(Double.POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, new IntRational(Double.NEGATIVE_INFINITY));
+		return Stream.of(
+				Arguments.of(Math.PI, Math.PI),
+				Arguments.of(phi, phi),
+				Arguments.of(1 / phi, 1 / phi));
 	}
 	
-	@Test
-	public void testNegate() {
-		assertEquals(new IntRational(34, 93), new IntRational(-34, 93).negate());
-		assertEquals(ZERO, ZERO.negate());
-		assertEquals(NAN, NAN.negate());
-		assertEquals(POSITIVE_INFINITY, new IntRational(Integer.MIN_VALUE).negate());
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.negate());
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.negate());
+	@ParameterizedTest
+	@MethodSource
+	void testNegate(IntRational value, IntRational result) {
+		assertEquals(result, value.negate());
 	}
 	
-	@Test
-	public void testIsZero() {
-		assertFalse(new IntRational(9922, 112).isZero());
-		assertTrue(ZERO.isZero());
-		assertFalse(ONE.isZero());
-		assertFalse(NAN.isZero());
-		assertFalse(POSITIVE_INFINITY.isZero());
-		assertFalse(NEGATIVE_INFINITY.isZero());
+	static Stream<Arguments> testNegate() {
+		return Stream.of(
+				Arguments.of(new IntRational(-34, 93), new IntRational(34, 93)),
+				Arguments.of(ZERO, ZERO),
+				Arguments.of(NAN, NAN),
+				Arguments.of(new IntRational(Integer.MIN_VALUE), POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testAdd() {
-		assertEquals(new IntRational(3, 4), new IntRational(2, 4).add(new IntRational(2, 8)));
-		assertEquals(new IntRational(0, 4), new IntRational(0, 1).add(new IntRational(0, 3400)));
-		assertEquals(new IntRational(1, 2), new IntRational(13, 30).add(new IntRational(2, 30)));
-		assertEquals(ZERO, new IntRational(1, Integer.MAX_VALUE).add(new IntRational(-1, Integer.MAX_VALUE)));
-		assertEquals(ZERO, new IntRational(Integer.MAX_VALUE).add(new IntRational(-Integer.MAX_VALUE)));
-		assertEquals(ZERO, ZERO.add(ZERO));
-		assertEquals(NAN, ONE.add(NAN));
-		assertEquals(NAN, NAN.add(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.add(NEGATIVE_INFINITY));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.add(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.add(NEGATIVE_INFINITY));
-		assertEquals(POSITIVE_INFINITY, new IntRational(1_000_000_000).add(new IntRational(2_000_000_000)));
-		assertEquals(new IntRational(2, 1_000_000_000).doubleValue(), new IntRational(1, 1_000_000_000).add(new IntRational(1, 1_000_000_001)).doubleValue(), 1e-9);
-
-		assertEquals(new IntRational(-325, 18), new IntRational(17, 18).add(-19));
-		assertEquals(NAN, NAN.add(17));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.add(217));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.add(9973));
+	@ParameterizedTest
+	@MethodSource
+	void testIsZero(IntRational value, boolean result) {
+		assertEquals(result, value.isZero());
 	}
 	
-	@Test
-	public void testSubtract() {
-		assertEquals(new IntRational(1, 4), new IntRational(2, 4).subtract(new IntRational(2, 8)));
-		assertEquals(new IntRational(0, 4), new IntRational(0, 1).subtract(new IntRational(0, 3400)));
-		assertEquals(new IntRational(1, 2), new IntRational(27, 50).subtract(new IntRational(2, 50)));
-		assertEquals(ZERO, new IntRational(1, Integer.MAX_VALUE).subtract(new IntRational(1, Integer.MAX_VALUE)));
-		assertEquals(ZERO, new IntRational(Integer.MAX_VALUE).subtract(new IntRational(Integer.MAX_VALUE)));
-		assertEquals(NAN, ONE.subtract(NAN));
-		assertEquals(NAN, NAN.subtract(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.subtract(POSITIVE_INFINITY));
-		assertEquals(NAN, NEGATIVE_INFINITY.subtract(NEGATIVE_INFINITY));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.subtract(NEGATIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.subtract(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, new IntRational(-1_000_000_000).subtract(new IntRational(2_000_000_000)));
-		assertEquals(new IntRational(-2, 2_000_000_000).doubleValue(), new IntRational(-1, 2_000_000_000).subtract(new IntRational(1, 2_000_000_001)).doubleValue(), 1e-9);
-
-		assertEquals(new IntRational(-21, 11), new IntRational(100, 11).subtract(11));
-		assertEquals(NAN, NAN.subtract(17));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.subtract(217));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.subtract(9973));
+	static Stream<Arguments> testIsZero() {
+		return Stream.of(
+				Arguments.of(new IntRational(9922, 112), false),
+				Arguments.of(ZERO, true),
+				Arguments.of(ONE, false),
+				Arguments.of(NAN, false),
+				Arguments.of(POSITIVE_INFINITY, false),
+				Arguments.of(NEGATIVE_INFINITY, false));
 	}
 	
-	@Test
-	public void testInvert() {
-		assertEquals(new IntRational(26, 557), new IntRational(557, 26).invert());
-		assertEquals(POSITIVE_INFINITY, ZERO.invert());
-		assertEquals(NAN, NAN.invert());
-		assertEquals(ZERO, POSITIVE_INFINITY.invert());
-		assertEquals(ZERO, NEGATIVE_INFINITY.invert());
+	@ParameterizedTest
+	@MethodSource
+	void testAdd(IntRational summand1, IntRational summand2, IntRational result) {
+		assertEquals(result, summand1.add(summand2));
 	}
 	
-	@Test
-	public void testIsOne() {
-		assertFalse(new IntRational(992, 1012).isOne());
-		assertFalse(ZERO.isOne());
-		assertTrue(ONE.isOne());
-		assertFalse(NAN.isOne());
-		assertFalse(POSITIVE_INFINITY.isOne());
-		assertFalse(NEGATIVE_INFINITY.isOne());
+	static Stream<Arguments> testAdd() {
+		return Stream.of(
+				Arguments.of(new IntRational(2, 4), new IntRational(2, 8), new IntRational(3, 4)),
+				Arguments.of(new IntRational(0, 1), new IntRational(0, 3400), new IntRational(0, 4)),
+				Arguments.of(new IntRational(13, 30), new IntRational(2, 30), new IntRational(1, 2)),
+				Arguments.of(new IntRational(1, Integer.MAX_VALUE), new IntRational(-1, Integer.MAX_VALUE), ZERO),
+				Arguments.of(new IntRational(Integer.MAX_VALUE), new IntRational(-Integer.MAX_VALUE), ZERO),
+				Arguments.of(ZERO, ZERO, ZERO),
+				Arguments.of(ONE, NAN, NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NEGATIVE_INFINITY),
+				Arguments.of(new IntRational(1_000_000_000), new IntRational(2_000_000_000), POSITIVE_INFINITY),
+				Arguments.of(new IntRational(1, 1_000_000_000-1),new IntRational(1, 1_000_000_000+1),new IntRational(2, 1_000_000_000))
+		);
 	}
 	
-	@Test
-	public void testMultiply() {
-		assertEquals(new IntRational(1, 4), new IntRational(3, 8).multiply(new IntRational(4, 6)));
-		assertEquals(ZERO, new IntRational(4, 8).multiply(0));
-		assertEquals(new IntRational(50, 3), new IntRational(25, 15).multiply(10));
-		assertEquals(ZERO, new IntRational(253, -7).multiply(0));
-		
-		assertEquals(NAN, NAN.multiply(5));
-		assertEquals(NAN, NAN.multiply(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.multiply(NAN));
-		
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.multiply(ONE));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.multiply(-35));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.multiply(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.multiply(ONE));
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.multiply(-31));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.multiply(NEGATIVE_INFINITY));
+	@ParameterizedTest
+	@MethodSource
+	void testAddInt(IntRational summand1, int summand2, IntRational result) {
+		assertEquals(result, summand1.add(summand2));
 	}
 	
-	@Test
-	public void testDivide() {
-		assertEquals(new IntRational(5, 64), new IntRational(3, 8).divide(new IntRational(24, 5)));
-		assertEquals(new IntRational(1, 6), new IntRational(4, 8).divide(3));
-		
-		assertEquals(NAN, NAN.divide(5));
-		assertEquals(NAN, NAN.divide(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.divide(NAN));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.divide(ONE));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.divide(-5));
-		assertEquals(NAN, POSITIVE_INFINITY.divide(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.divide(ONE));
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.divide(-11456));
-		assertEquals(NAN, NEGATIVE_INFINITY.divide(NEGATIVE_INFINITY));
-		assertEquals(ZERO, ONE.divide(NEGATIVE_INFINITY));
+	static Stream<Arguments> testAddInt() {
+		return Stream.of(
+				Arguments.of(NAN, 17, NAN),
+				Arguments.of(POSITIVE_INFINITY, 217, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, 9973, NEGATIVE_INFINITY),
+				Arguments.of(new IntRational(17, 18), -19, new IntRational(-325, 18)));
 	}
 	
-	@Test
-	public void testPow() {
-		assertEquals(new IntRational(25, 81), new IntRational(-5, 9).pow(2));
-		assertEquals(new IntRational(27, 512), new IntRational(8, 3).pow(-3));
-		assertEquals(ONE, new IntRational(831).pow(0));
-		assertEquals(NAN, NAN.pow(72));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.pow(93));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.pow(94));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.pow(95));
-		assertEquals(POSITIVE_INFINITY, ZERO.pow(-96));
-		assertEquals(ZERO, ZERO.pow(97));
+	@ParameterizedTest
+	@MethodSource
+	void testSubtract(IntRational minuend, IntRational subtrahend, IntRational result) {
+		assertEquals(result, minuend.subtract(subtrahend));
 	}
 	
-	@Test
-	public void testSignum() {
-		assertEquals(1, new IntRational(-417, -211).signum());
-		assertEquals(-1, new IntRational(7190, -44582).signum());
-		assertEquals(-1, NEGATIVE_INFINITY.signum());
-		assertEquals(0, ZERO.signum());
-		assertEquals(0, NAN.signum());
-		assertEquals(1, POSITIVE_INFINITY.signum());
+	static Stream<Arguments> testSubtract() {
+		return Stream.of(
+				Arguments.of(new IntRational(2, 4), new IntRational(2, 8), new IntRational(1, 4)),
+				Arguments.of(new IntRational(0, 1), new IntRational(0, 3400), new IntRational(0, 4)),
+				Arguments.of(new IntRational(27, 50), new IntRational(2, 50), new IntRational(1, 2)),
+				Arguments.of(new IntRational(1, Integer.MAX_VALUE), new IntRational(1, Integer.MAX_VALUE), ZERO),
+				Arguments.of(new IntRational(Integer.MAX_VALUE), new IntRational(Integer.MAX_VALUE), ZERO),
+				Arguments.of(ONE, NAN, NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(
+						new IntRational(-1, 2_000_000_000 - 1),
+						new IntRational(1, 2_000_000_000 + 1),
+						new IntRational(-2, 2_000_000_000)),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NEGATIVE_INFINITY),
+				Arguments.of(new IntRational(-1_000_000_000), new IntRational(2_000_000_000), NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testAbsolute() {
-		assertEquals(new IntRational(319, 12), new IntRational(319, -12).absolute());
-		assertEquals(new IntRational(320, 13), new IntRational(320, 13).absolute());
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.absolute());
-		assertEquals(ZERO, ZERO.absolute());
-		assertEquals(NAN, NAN.absolute());
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.absolute());
+	@ParameterizedTest
+	@MethodSource
+	void testSubtractInt(IntRational minuend, int subtrahend, IntRational result) {
+		assertEquals(result, minuend.subtract(subtrahend));
 	}
 	
-	@Test
-	public void testRound() {
-		assertEquals(0, new IntRational(0).round());
-		assertEquals(1000, new IntRational(1000).round());
-		assertEquals(-1000, new IntRational(-1000).round());
-		
-		assertEquals(-6, new IntRational(-6.75).ceil());
-		assertEquals(-6, new IntRational(-6.75).round(RoundingMode.DOWN));
-		assertEquals(-7, new IntRational(-6.75).floor());
-		assertEquals(-7, new IntRational(-6.75).round(RoundingMode.HALF_DOWN));
-		assertEquals(-7, new IntRational(-6.75).round(RoundingMode.HALF_EVEN));
-		assertEquals(-7, new IntRational(-6.75).round());
-		assertEquals(-7, new IntRational(-6.75).round(RoundingMode.UP));
-		
-		assertEquals(-2, new IntRational(-2.5).ceil());
-		assertEquals(-2, new IntRational(-2.5).round(RoundingMode.DOWN));
-		assertEquals(-3, new IntRational(-2.5).floor());
-		assertEquals(-2, new IntRational(-2.5).round(RoundingMode.HALF_DOWN));
-		assertEquals(-2, new IntRational(-2.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(-3, new IntRational(-2.5).round());
-		assertEquals(-3, new IntRational(-2.5).round(RoundingMode.UP));
-		
-		assertEquals(3, new IntRational(2.5).ceil());
-		assertEquals(2, new IntRational(2.5).round(RoundingMode.DOWN));
-		assertEquals(2, new IntRational(2.5).floor());
-		assertEquals(2, new IntRational(2.5).round(RoundingMode.HALF_DOWN));
-		assertEquals(2, new IntRational(2.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(3, new IntRational(2.5).round());
-		assertEquals(3, new IntRational(2.5).round(RoundingMode.UP));
-		
-		assertEquals(-4, new IntRational(-3.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(0, NAN.round(RoundingMode.HALF_EVEN));
+	static Stream<Arguments> testSubtractInt() {
+		return Stream.of(
+				Arguments.of(NAN, 17, NAN),
+				Arguments.of(POSITIVE_INFINITY, 217, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, 9973, NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testDoubleValue() {
-		assertEquals(430.0/37000, new IntRational(430, 37000).doubleValue(), 1e-9);
-		assertEquals(Double.NaN, NAN.doubleValue(), 1e-9);
-		assertEquals(Double.POSITIVE_INFINITY, POSITIVE_INFINITY.doubleValue(), 1e-9);
-		assertEquals(Double.NEGATIVE_INFINITY, NEGATIVE_INFINITY.doubleValue(), 1e-9);
-	}
-
-	@Test
-	public void testFloatValue() {
-		assertEquals(45000.0/37, new IntRational(45000, 37).floatValue(), 1e-3);
-		assertEquals(Float.NaN, NAN.floatValue(), 1e-3);
-		assertEquals(Float.POSITIVE_INFINITY, POSITIVE_INFINITY.floatValue(), 1e-3);
-		assertEquals(Float.NEGATIVE_INFINITY, NEGATIVE_INFINITY.floatValue(), 1e-3);
-	}
-
-	@Test
-	public void testIntValue() {
-		assertEquals(103/9, new IntRational(103, 9).intValue());
-		assertEquals(0, new IntRational(-7, 101).intValue());
-	}
-
-	@Test
-	public void testLongValue() {
-		assertEquals(101L/7, new IntRational(101, 7).longValue());
-		assertEquals(0L, new IntRational(-7, 101).longValue());
+	@ParameterizedTest
+	@MethodSource
+	void testInvert(IntRational value, IntRational result) {
+		assertEquals(result, value.invert());
 	}
 	
-	@Test
-	public void testCompareTo() {
-		assertEquals(1, new IntRational(-3, 99).compareTo(new IntRational(-4, 100)));
-		assertEquals(-1,
-				new IntRational(Integer.MAX_VALUE, Integer.MAX_VALUE-1)
-				.compareTo(new IntRational(Integer.MAX_VALUE-1, Integer.MAX_VALUE-2)));
-		assertEquals(0, ZERO.compareTo(ZERO));
-		assertEquals(-1, ZERO.compareTo(ONE));
-		assertEquals(1, ONE.compareTo(ZERO));
-		assertEquals(-1, ONE.compareTo(POSITIVE_INFINITY));
-		assertEquals(1, ONE.compareTo(NEGATIVE_INFINITY));
-		assertEquals(-1, ONE.compareTo(NAN));
-		assertEquals(1, NAN.compareTo(NEGATIVE_INFINITY));
-		assertEquals(-1, POSITIVE_INFINITY.compareTo(NAN));
-		assertEquals(1, POSITIVE_INFINITY.compareTo(ONE));
+	static Stream<Arguments> testInvert() {
+		return Stream.of(
+				Arguments.of(new IntRational(557, 26), new IntRational(26, 557)),
+				Arguments.of(ZERO, POSITIVE_INFINITY),
+				Arguments.of(NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ZERO),
+				Arguments.of(NEGATIVE_INFINITY, ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIsOne(IntRational value, boolean result) {
+		assertEquals(result, value.isOne());
+	}
+	
+	static Stream<Arguments> testIsOne() {
+		return Stream.of(
+				Arguments.of(new IntRational(992, 1012), false),
+				Arguments.of(ZERO, false),
+				Arguments.of(ONE, true),
+				Arguments.of(NAN, false),
+				Arguments.of(POSITIVE_INFINITY, false),
+				Arguments.of(NEGATIVE_INFINITY, false));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiply(IntRational factor1, IntRational factor2, IntRational result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiply() {
+		return Stream.of(
+				Arguments.of(new IntRational(3, 8), new IntRational(4, 6), new IntRational(1, 4)),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ONE, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, ONE, NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiplyByInt(IntRational factor1, int factor2, IntRational result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiplyByInt() {
+		return Stream.of(
+				Arguments.of(new IntRational(4, 8), 0, ZERO),
+				Arguments.of(new IntRational(25, 15), 10, new IntRational(50, 3)),
+				Arguments.of(new IntRational(253, -7), 0, ZERO),
+				Arguments.of(NAN, 5, NAN),
+				Arguments.of(NEGATIVE_INFINITY, -35, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, -31, NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivide(IntRational dividend, IntRational divisor, IntRational result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivide() {
+		return Stream.of(
+				Arguments.of(new IntRational(3, 8), new IntRational(24, 5), new IntRational(5, 64)),
+				
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ONE, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				Arguments.of(NEGATIVE_INFINITY, ONE, NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(ONE, NEGATIVE_INFINITY, ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivideByInt(IntRational dividend, int divisor, IntRational result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivideByInt() {
+		return Stream.of(
+				Arguments.of(new IntRational(4, 8), 3, new IntRational(1, 6)),
+				Arguments.of(NAN, 5, NAN),
+				Arguments.of(NEGATIVE_INFINITY, -5, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, -11456, NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testPow(IntRational base, int exponent, IntRational result) {
+		assertEquals(result, base.pow(exponent));
+	}
+	
+	static Stream<Arguments> testPow() {
+		return Stream.of(
+				Arguments.of(new IntRational(-5, 9), 2, new IntRational(25, 81)),
+				Arguments.of(new IntRational(8, 3), -3, new IntRational(27, 512)),
+				Arguments.of(new IntRational(831), 0, ONE),
+				Arguments.of(NAN, 72, NAN),
+				Arguments.of(NEGATIVE_INFINITY, 93, NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, 94, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, 95, POSITIVE_INFINITY),
+				Arguments.of(ZERO, -96, POSITIVE_INFINITY),
+				Arguments.of(ZERO, 97, ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSignum(IntRational value, int result) {
+		assertEquals(result, value.signum());
+	}
+	
+	static Stream<Arguments> testSignum() {
+		return Stream.of(
+				Arguments.of(new IntRational(-417, -211), 1),
+				Arguments.of(new IntRational(7190, -44582), -1),
+				Arguments.of(NEGATIVE_INFINITY, -1),
+				Arguments.of(ZERO, 0),
+				Arguments.of(NAN, 0),
+				Arguments.of(POSITIVE_INFINITY, 1));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testAbsolute(IntRational value, IntRational result) {
+		assertEquals(result, value.absolute());
+	}
+	
+	static Stream<Arguments> testAbsolute() {
+		return Stream.of(
+				Arguments.of(new IntRational(319, -12), new IntRational(319, 12)),
+				Arguments.of(new IntRational(320, 13), new IntRational(320, 13)),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(ZERO, ZERO),
+				Arguments.of(NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testRound(IntRational value, RoundingMode roundingMode, int result) {
+		assertEquals(result, value.round(roundingMode));
+	}
+	
+	static Stream<Arguments> testRound() {
+		return Stream.of(
+				Arguments.of(new IntRational(0), RoundingMode.HALF_UP, 0),
+				Arguments.of(new IntRational(1000), RoundingMode.HALF_UP, 1000),
+				Arguments.of(new IntRational(-1000), RoundingMode.HALF_UP, -1000),
+				
+				Arguments.of(new IntRational(-6.75), RoundingMode.DOWN, -6),
+				Arguments.of(new IntRational(-6.75), RoundingMode.HALF_DOWN, -7),
+				Arguments.of(new IntRational(-6.75), RoundingMode.HALF_EVEN, -7),
+				Arguments.of(new IntRational(-6.75), RoundingMode.HALF_UP, -7),
+				Arguments.of(new IntRational(-6.75), RoundingMode.UP, -7),
+				
+				Arguments.of(new IntRational(-2.5), RoundingMode.DOWN, -2),
+				Arguments.of(new IntRational(-2.5), RoundingMode.HALF_DOWN, -2),
+				Arguments.of(new IntRational(-2.5), RoundingMode.HALF_EVEN, -2),
+				Arguments.of(new IntRational(-2.5), RoundingMode.HALF_UP, -3),
+				Arguments.of(new IntRational(-2.5), RoundingMode.UP, -3),
+				
+				Arguments.of(new IntRational(2.5), RoundingMode.DOWN, 2),
+				Arguments.of(new IntRational(2.5), RoundingMode.HALF_DOWN, 2),
+				Arguments.of(new IntRational(2.5), RoundingMode.HALF_EVEN, 2),
+				Arguments.of(new IntRational(2.5), RoundingMode.HALF_UP, 3),
+				Arguments.of(new IntRational(2.5), RoundingMode.UP, 3),
+				
+				Arguments.of(new IntRational(-3.5), RoundingMode.HALF_EVEN, -4),
+				Arguments.of(NAN, RoundingMode.HALF_EVEN, 0));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testCeil(IntRational value, int result) {
+		assertEquals(result, value.ceil());
+	}
+	
+	static Stream<Arguments> testCeil() {
+		return Stream.of(
+				Arguments.of(new IntRational(-6.75), -6),
+				Arguments.of(new IntRational(-2.5), -2),
+				Arguments.of(new IntRational(2.5), 3));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testFloor(IntRational value, int result) {
+		assertEquals(result, value.floor());
+	}
+	
+	static Stream<Arguments> testFloor() {
+		return Stream.of(
+				Arguments.of(new IntRational(-6.75), -7),
+				Arguments.of(new IntRational(-2.5), -3),
+				Arguments.of(new IntRational(2.5), 2));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleValue(IntRational value, double result) {
+		assertEquals(result, value.doubleValue(), 1e-9);
+	}
+	
+	static Stream<Arguments> testDoubleValue() {
+		return Stream.of(
+				Arguments.of(new IntRational(430, 37000), 430.0 / 37000),
+				Arguments.of(NAN, Double.NaN),
+				Arguments.of(POSITIVE_INFINITY, Double.POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testFloatValue(IntRational value, float result) {
+		assertEquals(result, value.floatValue(), 1e-3);
+	}
+	
+	static Stream<Arguments> testFloatValue() {
+		return Stream.of(
+				Arguments.of(new IntRational(45000, 37), 45000.0f / 37),
+				Arguments.of(NAN, Float.NaN),
+				Arguments.of(POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIntValue(IntRational value, int result) {
+		assertEquals(result, value.intValue());
+	}
+	
+	static Stream<Arguments> testIntValue() {
+		return Stream.of(
+				Arguments.of(new IntRational(103, 9), 103 / 9),
+				Arguments.of(new IntRational(-7, 101), 0));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testLongValue(IntRational value, long result) {
+		assertEquals(result, value.longValue());
+	}
+	
+	static Stream<Arguments> testLongValue() {
+		return Stream.of(
+				Arguments.of(new IntRational(101, 7), 101L / 7),
+				Arguments.of(new IntRational(-7, 101), 0L));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testCompareTo(IntRational value1, IntRational value2, int result) {
+		assertEquals(result, value1.compareTo(value2));
+	}
+	
+	static Stream<Arguments> testCompareTo() {
+		return Stream.of(
+				Arguments.of(new IntRational(-3, 99), new IntRational(-4, 100), 1),
+				Arguments.of(
+						new IntRational(Integer.MAX_VALUE, Integer.MAX_VALUE - 1),
+						new IntRational(Integer.MAX_VALUE - 1, Integer.MAX_VALUE - 2),
+						-1),
+				Arguments.of(ZERO, ZERO, 0),
+				Arguments.of(ZERO, ONE, -1),
+				Arguments.of(ONE, ZERO, 1),
+				Arguments.of(ONE, POSITIVE_INFINITY, -1),
+				Arguments.of(ONE, NEGATIVE_INFINITY, 1),
+				Arguments.of(ONE, NAN, -1),
+				Arguments.of(NAN, NEGATIVE_INFINITY, 1),
+				Arguments.of(POSITIVE_INFINITY, NAN, -1),
+				Arguments.of(POSITIVE_INFINITY, ONE, 1));
 	}
 }

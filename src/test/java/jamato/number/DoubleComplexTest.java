@@ -4,146 +4,277 @@ import static jamato.number.DoubleComplex.I;
 import static jamato.number.DoubleComplex.ONE;
 import static jamato.number.DoubleComplex.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
 
-public class DoubleComplexTest {
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class DoubleComplexTest {
 	
-	@Test
-	public void testDoubleConstructor() {
-		assertEquals(DoubleComplex.ZERO, new DoubleComplex(0, 0));
-		assertEquals(ONE, new DoubleComplex(1, 0));
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleConstructor(double real, double imaginary, DoubleComplex result) {
+		assertEquals(result, new DoubleComplex(real, imaginary));
 	}
 	
-	@Test
-	public void testPolar() {
-		assertEquals(DoubleComplex.ZERO, DoubleComplex.polar(0, 22));
-		assertEquals(DoubleComplex.ONE, DoubleComplex.polar(1, 0));
-		assertTrue(DoubleComplex.I.distanceTo(DoubleComplex.polar(1, Math.PI/2)) < 1e-10);
+	static Stream<Arguments> testDoubleConstructor() {
+		return Stream.of(
+				Arguments.of(0, 0, ZERO),
+				Arguments.of(1, 0, ONE));
 	}
 	
-	@Test
-	public void testNegate() {
-		assertEquals(new DoubleComplex(33.3, 43), new DoubleComplex(-33.3, -43).negate());
+	@ParameterizedTest
+	@MethodSource
+	void testPolar(double z, double phi, DoubleComplex result) {
+		assertEquals(0, result.distanceTo(DoubleComplex.polar(z, phi)), 1e-9);
+	}
+	
+	static Stream<Arguments> testPolar() {
+		return Stream.of(
+				Arguments.of(0, 22, ZERO),
+				Arguments.of(1, 0, ONE),
+				Arguments.of(1, Math.PI / 2, I));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testNegate(DoubleComplex value, DoubleComplex result) {
+		assertEquals(result, value.negate());
+	}
+	
+	static Stream<Arguments> testNegate() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(-33.3, -43), new DoubleComplex(33.3, 43)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIsZero(DoubleComplex value, boolean result) {
+		assertEquals(result, value.isZero());
+	}
+	
+	static Stream<Arguments> testIsZero() {
+		return Stream.of(
+				Arguments.of(ZERO, true),
+				Arguments.of(ONE, false),
+				Arguments.of(I, false));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testAdd(DoubleComplex summand1, DoubleComplex summand2, DoubleComplex result) {
+		assertEquals(result, summand1.add(summand2));
+	}
+	
+	static Stream<Arguments> testAdd() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(2, 4), new DoubleComplex(1), new DoubleComplex(3, 4)),
+				Arguments.of(new DoubleComplex(0, 1), new DoubleComplex(4), new DoubleComplex(4, 1)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSubtract(DoubleComplex minuend, DoubleComplex subtrahend, DoubleComplex result) {
+		assertEquals(result, minuend.subtract(subtrahend));
+	}
+	
+	static Stream<Arguments> testSubtract() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(2, 4), new DoubleComplex(1), new DoubleComplex(1, 4)),
+				Arguments.of(new DoubleComplex(0, 1), new DoubleComplex(4), new DoubleComplex(-4, 1)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testInvert(DoubleComplex value, DoubleComplex result) {
+		assertEquals(result, value.invert());
+	}
+	
+	static Stream<Arguments> testInvert() {
+		return Stream.of(
+				Arguments.of(ONE, ONE),
+				Arguments.of(new DoubleComplex(3, 4), new DoubleComplex(3.0 / 25, -4.0 / 25))
+		// Arguments.of(NAN, ZERO.invert())
+		);
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIsOne(DoubleComplex value, boolean result) {
+		assertEquals(result, value.isOne());
+	}
+	
+	static Stream<Arguments> testIsOne() {
+		return Stream.of(
+				Arguments.of(ZERO, false),
+				Arguments.of(ONE, true),
+				Arguments.of(I, false));
 	}
 
-	@Test
-	public void testIsZero() {
-		assertTrue(ZERO.isZero());
-		assertFalse(ONE.isZero());
-		assertFalse(I.isZero());
+	@ParameterizedTest
+	@MethodSource
+	void testMultiply(DoubleComplex factor1, DoubleComplex factor2, DoubleComplex result) {
+		assertEquals(result, factor1.multiply(factor2));
 	}
 	
-	@Test
-	public void testAdd() {
-		assertEquals(new DoubleComplex(3, 4), new DoubleComplex(2, 4).add(new DoubleComplex(1)));
-		assertEquals(new DoubleComplex(4, 1), new DoubleComplex(0, 1).add(4));
-	}
-	
-	@Test
-	public void testSubtract() {
-		assertEquals(new DoubleComplex(1, 4), new DoubleComplex(2, 4).subtract(new DoubleComplex(1)));
-		assertEquals(new DoubleComplex(-4, 1), new DoubleComplex(0, 1).subtract(4));
-	}
-	
-	@Test
-	public void testInvert() {
-		assertEquals(ONE, ONE.invert());
-		assertEquals(new DoubleComplex(3.0/25, -4.0/25), new DoubleComplex(3, 4).invert());
-		assertTrue(ZERO.invert().isNaN());
+	static Stream<Arguments> testMultiply() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(2, 3), new DoubleComplex(4, 5), new DoubleComplex(-7, 22)));
 	}
 
-	@Test
-	public void testIsOne() {
-		assertFalse(ZERO.isOne());
-		assertTrue(ONE.isOne());
-		assertFalse(I.isOne());
+	@ParameterizedTest
+	@MethodSource
+	void testMultiplyByDouble(DoubleComplex factor1, double factor2, DoubleComplex result) {
+		assertEquals(result, factor1.multiply(factor2));
 	}
 	
-	@Test
-	public void testMultiply() {
-		assertEquals(new DoubleComplex(-7, 22), new DoubleComplex(2, 3).multiply(new DoubleComplex(4, 5)));
-		assertEquals(ZERO, new DoubleComplex(4, 8).multiply(0));
-		assertEquals(new DoubleComplex(10.5, 4.5), new DoubleComplex(7, 3).multiply(1.5));
+	static Stream<Arguments> testMultiplyByDouble() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(4, 8), 0, ZERO),
+				Arguments.of(new DoubleComplex(7, 3), 1.5, new DoubleComplex(10.5, 4.5)));
 	}
 	
-	@Test
-	public void testDivide() {
-		assertEquals(new DoubleComplex(4, 5), new DoubleComplex(-7, 22).divide(new DoubleComplex(2, 3)));
-		assertEquals(new DoubleComplex(0.5, 1), new DoubleComplex(4, 8).divide(8));
-		assertEquals(new DoubleComplex(1, 2), new DoubleComplex(4, 8).divide(4.0));
+	@ParameterizedTest
+	@MethodSource
+	void testDivide(DoubleComplex dividend, DoubleComplex divisor, DoubleComplex result) {
+		assertEquals(result, dividend.divide(divisor));
 	}
 	
-	@Test
-	public void testPow() {
-		assertEquals(ONE, I.pow(-4));
-		assertEquals(ONE, I.pow(0));
-		assertEquals(I, I.pow(1));
-		assertEquals(I, I.pow(5));
-		assertEquals(ZERO, ZERO.pow(31));
-		assertEquals(new DoubleComplex(-119, -120), new DoubleComplex(2, 3).pow(4));
+	static Stream<Arguments> testDivide() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(-7, 22), new DoubleComplex(2, 3), new DoubleComplex(4, 5)));
 	}
 	
-	@Test
-	public void testAbs() {
-		assertEquals(0, ZERO.abs(), 0);
-		assertEquals(1, ONE.abs(), 0);
-		assertEquals(1, I.abs(), 0);
-		assertEquals(10, new DoubleComplex(-6, 8).abs(), 0);
+	@ParameterizedTest
+	@MethodSource
+	void testDivideByDouble(DoubleComplex dividend, double divisor, DoubleComplex result) {
+		assertEquals(result, dividend.divide(divisor));
 	}
 	
-	@Test
-	public void testDistanceTo() {
-		assertEquals(1, ZERO.distanceTo(ONE), 0);
-		assertEquals(1, ZERO.distanceTo(I), 0);
-		assertEquals(Math.sqrt(2), ONE.distanceTo(I), 0);
+	static Stream<Arguments> testDivideByDouble() {
+		return Stream.of(
+				Arguments.of(new DoubleComplex(4, 8), 8, new DoubleComplex(0.5, 1)),
+				Arguments.of(new DoubleComplex(4, 8), 4.0, new DoubleComplex(1, 2)));
 	}
 	
-	@Test
-	public void testConjugate() {
-		assertEquals(ZERO, ZERO.conjugate());
-		assertEquals(ONE, ONE.conjugate());
-		assertEquals(new DoubleComplex(0, -1), I.conjugate());
-		assertEquals(new DoubleComplex(3.5, 2.6), new DoubleComplex(3.5, -2.6).conjugate());
+	@ParameterizedTest
+	@MethodSource
+	void testPow(DoubleComplex base, int exponent, DoubleComplex result) {
+		assertEquals(result, base.pow(exponent));
 	}
 	
-	@Test
-	public void testIsFinite() {
-		assertTrue(ZERO.isFinite());
-		assertTrue(new DoubleComplex(7.7).isFinite());
-		assertFalse(ZERO.invert().isFinite());
+	static Stream<Arguments> testPow() {
+		return Stream.of(
+				Arguments.of(I, -4, ONE),
+				Arguments.of(I, 0, ONE),
+				Arguments.of(I, 1, I),
+				Arguments.of(I, 5, I),
+				Arguments.of(ZERO, 31, ZERO),
+				Arguments.of(new DoubleComplex(2, 3), 4, new DoubleComplex(-119, -120)));
 	}
 	
-	@Test
-	public void testIsNaN() {
-		assertFalse(ZERO.isNaN());
-		assertFalse(new DoubleComplex(7.7).isNaN());
-		assertTrue(ZERO.invert().isNaN());
+	@ParameterizedTest
+	@MethodSource
+	void testAbs(DoubleComplex value, double result) {
+		assertEquals(result, value.abs(), 0);
 	}
 	
-	@Test
-	public void testToString() {
-		assertEquals("0.0", ZERO.toString());
-		assertEquals("i", I.toString());
-		assertEquals("-i", new DoubleComplex(0, -1).toString());
-		assertEquals("47.0-i", new DoubleComplex(47, -1).toString());
-		assertEquals("3.0-2.5i", new DoubleComplex(3, -2.5).toString());
+	static Stream<Arguments> testAbs() {
+		return Stream.of(
+				Arguments.of(ZERO,  0),
+				Arguments.of(ONE, 1),
+				Arguments.of(I, 1),
+				Arguments.of(new DoubleComplex(-6, 8),  10));
 	}
 	
-	@Test
-	public void testValueOf() {
-		assertEquals(ONE, DoubleComplex.valueOf("1"));
-		assertEquals(ZERO, DoubleComplex.valueOf("0i"));
-		assertEquals(I, DoubleComplex.valueOf("0+1i"));
-		assertEquals(I, DoubleComplex.valueOf("i"));
-		assertEquals(new DoubleComplex(0, -1), DoubleComplex.valueOf("-i"));
-		assertEquals(new DoubleComplex(2, 1), DoubleComplex.valueOf("2+i"));
-		assertEquals(new DoubleComplex(2, -1), DoubleComplex.valueOf("2-i"));
-		assertEquals(new DoubleComplex(1.1, 1.2), DoubleComplex.valueOf("1.1+1.2i"));
-		assertEquals(new DoubleComplex(-1.3, 1.4), DoubleComplex.valueOf("-1.3+1.4i"));
-		assertEquals(new DoubleComplex(1.5, -1.6), DoubleComplex.valueOf("1.5-1.6i"));
-		assertEquals(new DoubleComplex(-1.7, -1.8), DoubleComplex.valueOf("-1.7-1.8i"));
+	@ParameterizedTest
+	@MethodSource
+	void testDistanceTo(DoubleComplex value1, DoubleComplex value2, double result) {
+		assertEquals(result, value1.distanceTo(value2), 0);
+	}
+	
+	static Stream<Arguments> testDistanceTo() {
+		return Stream.of(
+				Arguments.of(ZERO, ONE, 1),
+				Arguments.of(ZERO, I, 1),
+				Arguments.of(ONE, I, Math.sqrt(2)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testConjugate(DoubleComplex value, DoubleComplex result) {
+		assertEquals(result, value.conjugate());
+	}
+	
+	static Stream<Arguments> testConjugate() {
+		return Stream.of(
+				Arguments.of(ZERO, ZERO),
+				Arguments.of(ONE, ONE),
+				Arguments.of(I, new DoubleComplex(0, -1)),
+				Arguments.of(new DoubleComplex(3.5, -2.6), new DoubleComplex(3.5, 2.6)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIsFinite(DoubleComplex value, boolean result) {
+		assertEquals(result, value.isFinite());
+	}
+	
+	static Stream<Arguments> testIsFinite() {
+		return Stream.of(
+				Arguments.of(ZERO, true),
+				Arguments.of(new DoubleComplex(7.7), true),
+				Arguments.of(ZERO.invert(), false));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIsNaN(DoubleComplex value, boolean result) {
+		assertEquals(result, value.isNaN());
+	}
+	
+	static Stream<Arguments> testIsNaN() {
+		return Stream.of(
+				Arguments.of(ZERO, false),
+				Arguments.of(new DoubleComplex(7.7), false),
+				Arguments.of(ZERO.invert(), true));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testToString(DoubleComplex value, String result) {
+		assertEquals(result, value.toString());
+	}
+	
+	static Stream<Arguments> testToString() {
+		return Stream.of(
+				Arguments.of(ZERO.toString(), "0.0"),
+				Arguments.of(I.toString(), "i"),
+				Arguments.of(new DoubleComplex(0, -1), "-i"),
+				Arguments.of(new DoubleComplex(47, -1), "47.0-i"),
+				Arguments.of(new DoubleComplex(3, -2.5), "3.0-2.5i"));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testValueOf(String string, DoubleComplex result) {
+		assertEquals(result, DoubleComplex.valueOf(string));
+	}
+	
+	static Stream<Arguments> testValueOf() {
+		return Stream.of(
+				Arguments.of("1", ONE),
+				Arguments.of("0i", ZERO),
+				Arguments.of("0+1i", I),
+				Arguments.of("i", I),
+				Arguments.of("-i", new DoubleComplex(0, -1)),
+				Arguments.of("2+i", new DoubleComplex(2, 1)),
+				Arguments.of("2-i", new DoubleComplex(2, -1)),
+				Arguments.of("1.1+1.2i", new DoubleComplex(1.1, 1.2)),
+				Arguments.of("-1.3+1.4i", new DoubleComplex(-1.3, 1.4)),
+				Arguments.of("1.5-1.6i", new DoubleComplex(1.5, -1.6)),
+				Arguments.of("-1.7-1.8i", new DoubleComplex(-1.7, -1.8)));
 	}
 }

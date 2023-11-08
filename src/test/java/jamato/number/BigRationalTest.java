@@ -6,312 +6,441 @@ import static jamato.number.BigRational.ONE;
 import static jamato.number.BigRational.POSITIVE_INFINITY;
 import static jamato.number.BigRational.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.stream.Stream;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-public class BigRationalTest {
+class BigRationalTest {
 	
-	@Test
-	public void testDoubleConstructor() {
-		assertEquals(BigRational.ZERO, new BigRational(0.0));
-		assertEquals(BigRational.ONE, new BigRational(1.0));
-		assertEquals(new BigRational(3, 2), new BigRational(1.5));
-		assertEquals(new BigRational(1, 16), new BigRational(0.0625));
-		assertEquals(new BigRational(1234), new BigRational(1234.0));
-		assertEquals(new BigRational(987654321), new BigRational(987654321.0));
-		
-		assertEquals(new BigRational(43, 20), new BigRational(2.15));
-		assertEquals(new BigRational(-43, 20), new BigRational(-2.15));
-		assertEquals(Math.PI, new BigRational(Math.PI).doubleValue(), 1e-9);
-		double phi = Math.sqrt(5) / 2 + 0.5;
-		assertEquals(phi, new BigRational(phi).doubleValue(), 1e-9);
-		assertEquals(1/phi, new BigRational(1/phi).doubleValue(), 1e-9);
-
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleConstructor(double value, BigRational result) {
+		assertEquals(result, new BigRational(value));
+	}
+	
+	static Stream<Arguments> testDoubleConstructor() {
 		double greatestNonInteger = Math.pow(2, 52) - 0.5;
-		assertEquals(
-				new BigRational(BigInteger.TWO.pow(53).subtract(BigInteger.ONE), BigInteger.TWO),
-				new BigRational(greatestNonInteger));
-		double smallestNonInteger = -Math.pow(2, 52) + 0.5;
-		assertEquals(
-				new BigRational(BigInteger.TWO.pow(53).subtract(BigInteger.ONE).negate(), BigInteger.TWO),
-				new BigRational(smallestNonInteger));
-		
-		assertEquals(new BigRational(1, 1_000_000_000), new BigRational(1e-9));
-		
-		assertEquals(new BigRational(4503599627370497L, 4503599627370496L), new BigRational(Math.nextUp(1d)));
-		assertEquals(new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1074)), new BigRational(Double.MIN_VALUE));
-		assertEquals(new BigRational(BigInteger.ONE.negate(), BigInteger.TWO.pow(1074)), new BigRational(-Double.MIN_VALUE));
-		assertEquals(new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1022)), new BigRational(Double.MIN_NORMAL));
-		assertEquals(new BigRational(BigInteger.ONE.negate(), BigInteger.TWO.pow(1022)), new BigRational(-Double.MIN_NORMAL));
-
-		assertEquals(new BigRational(
-				BigInteger.TWO.pow(150)),
-				new BigRational(Math.pow(2, 150)));
-		assertEquals(
-				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(160)),
-				new BigRational(Math.pow(0.5, 160)));
-		
-		assertEquals(
-				new BigRational(BigInteger.ONE, BigInteger.TWO.pow(180).multiply(BigInteger.valueOf(3))),
-				new BigRational(Math.pow(0.5, 180) / 3));
-		
-		assertEquals(
-				new BigRational(BigInteger.ONE, BigInteger.valueOf(3).multiply(BigInteger.TWO.pow(Long.SIZE-2))),
-				new BigRational(4.0 / 3 / Math.pow(2, Long.SIZE)));
-
-		assertEquals(NAN, new BigRational(Double.NaN));
-		assertEquals(POSITIVE_INFINITY, new BigRational(Double.POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, new BigRational(Double.NEGATIVE_INFINITY));
+		double smallesNonInteger = -Math.pow(2, 52) + 0.5;
+		return Stream.of(
+				Arguments.of(0.0, BigRational.ZERO),
+				Arguments.of(1.0, BigRational.ONE),
+				Arguments.of(1.5, new BigRational(3, 2)),
+				Arguments.of(0.0625, new BigRational(1, 16)),
+				Arguments.of(1234.0, new BigRational(1234)),
+				Arguments.of(987654321.0, new BigRational(987654321)),
+				Arguments.of(2.15, new BigRational(43, 20)),
+				Arguments.of(-2.15, new BigRational(-43, 20)),
+				Arguments.of(
+						greatestNonInteger,
+						new BigRational(BigInteger.TWO.pow(53).subtract(BigInteger.ONE), BigInteger.TWO)),
+				Arguments.of(
+						smallesNonInteger,
+						new BigRational(BigInteger.TWO.pow(53).subtract(BigInteger.ONE).negate(), BigInteger.TWO)),
+				Arguments.of(1e-9, new BigRational(1, 1_000_000_000)),
+				Arguments.of(Math.nextUp(1d), new BigRational(4503599627370497L, 4503599627370496L)),
+				Arguments.of(Double.MIN_VALUE, new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1074))),
+				Arguments.of(-Double.MIN_VALUE, new BigRational(BigInteger.ONE.negate(), BigInteger.TWO.pow(1074))),
+				Arguments.of(Double.MIN_NORMAL, new BigRational(BigInteger.ONE, BigInteger.TWO.pow(1022))),
+				Arguments.of(-Double.MIN_NORMAL, new BigRational(BigInteger.ONE.negate(), BigInteger.TWO.pow(1022))),
+				Arguments.of(Math.pow(2, 150), new BigRational(BigInteger.TWO.pow(150))),
+				Arguments.of(Math.pow(0.5, 160), new BigRational(BigInteger.ONE, BigInteger.TWO.pow(160))),
+				Arguments.of(
+						Math.pow(0.5, 180) / 3,
+						new BigRational(BigInteger.ONE, BigInteger.TWO.pow(180).multiply(BigInteger.valueOf(3)))),
+				Arguments.of(
+						4.0 / 3 / Math.pow(2, Long.SIZE),
+						new BigRational(BigInteger.ONE,
+								BigInteger.valueOf(3).multiply(BigInteger.TWO.pow(Long.SIZE - 2)))),
+				Arguments.of(Double.NaN, NAN),
+				Arguments.of(Double.POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(Double.NEGATIVE_INFINITY, NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testNegate() {
-		assertEquals(new BigRational(34, 93), new BigRational(-34, 93).negate());
-		assertEquals(ZERO, ZERO.negate());
-		assertEquals(NAN, NAN.negate());
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.negate());
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.negate());
+	void testDoubleConstructorByDoubleValue(BigRational value, double result) {
+		assertEquals(result, value.doubleValue(), 1e-9);
 	}
 	
-	@Test
-	public void testIsZero() {
-		assertFalse(new BigRational(9922, 112).isZero());
-		assertTrue(ZERO.isZero());
-		assertFalse(ONE.isZero());
-		assertFalse(NAN.isZero());
-		assertFalse(POSITIVE_INFINITY.isZero());
-		assertFalse(NEGATIVE_INFINITY.isZero());
+	static Stream<Arguments> testDoubleConstructorByDoubleValue() {
+		double phi = Math.sqrt(5) / 2 + 0.5;
+		return Stream.of(
+				Arguments.of(new BigRational(Math.PI), Math.PI),
+				Arguments.of(new BigRational(phi), phi),
+				Arguments.of(new BigRational(1 / phi), 1 / phi));
 	}
 	
-	@Test
-	public void testAdd() {
-		assertEquals(new BigRational(3, 4), new BigRational(2, 4).add(new BigRational(2, 8)));
-		assertEquals(new BigRational(0, 4), new BigRational(0, 1).add(new BigRational(0, 3400)));
-		assertEquals(new BigRational(1, 2), new BigRational(13, 30).add(new BigRational(2, 30)));
-		assertEquals(new BigRational(new BigInteger("12345678987654322"), new BigInteger("111111111")), new BigRational(BigInteger.ONE, new BigInteger("111111111")).add(111111111L));
-		assertEquals(ZERO, new BigRational(1, Integer.MAX_VALUE).add(new BigRational(-1, Integer.MAX_VALUE)));
-		assertEquals(ZERO, new BigRational(Integer.MAX_VALUE).add(new BigRational(-Integer.MAX_VALUE)));
-		assertEquals(ZERO, ZERO.add(ZERO));
-		assertEquals(NAN, ONE.add(NAN));
-		assertEquals(NAN, NAN.add(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.add(NEGATIVE_INFINITY));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.add(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.add(NEGATIVE_INFINITY));
-
-		assertEquals(new BigRational(-325, 18), new BigRational(17, 18).add(-19));
-		assertEquals(NAN, NAN.add(17));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.add(217));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.add(9973));
+	@ParameterizedTest
+	@MethodSource
+	void testNegate(BigRational value, BigRational result) {
+		assertEquals(result, value.negate());
 	}
 	
-	@Test
-	public void testSubtract() {
-		assertEquals(new BigRational(1, 4), new BigRational(2, 4).subtract(new BigRational(2, 8)));
-		assertEquals(new BigRational(0, 4), new BigRational(0, 1).subtract(new BigRational(0, 3400)));
-		assertEquals(new BigRational(1, 2), new BigRational(27, 50).subtract(new BigRational(2, 50)));
-		assertEquals(ZERO, new BigRational(1, Integer.MAX_VALUE).subtract(new BigRational(1, Integer.MAX_VALUE)));
-		assertEquals(ZERO, new BigRational(Integer.MAX_VALUE).subtract(new BigRational(Integer.MAX_VALUE)));
-		assertEquals(NAN, ONE.subtract(NAN));
-		assertEquals(NAN, NAN.subtract(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.subtract(POSITIVE_INFINITY));
-		assertEquals(NAN, NEGATIVE_INFINITY.subtract(NEGATIVE_INFINITY));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.subtract(NEGATIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.subtract(POSITIVE_INFINITY));
-		
-		assertEquals(new BigRational(-21, 11), new BigRational(100, 11).subtract(11));
-		assertEquals(NAN, NAN.subtract(17));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.subtract(217));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.subtract(9973));
+	static Stream<Arguments> testNegate() {
+		return Stream.of(
+				Arguments.of(new BigRational(-34, 93), new BigRational(34, 93)),
+				Arguments.of(ZERO, ZERO),
+				Arguments.of(NAN, NAN),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testInvert() {
-		assertEquals(new BigRational(26, 557), new BigRational(557, 26).invert());
-		assertEquals(POSITIVE_INFINITY, ZERO.invert());
-		assertEquals(NAN, NAN.invert());
-		assertEquals(ZERO, POSITIVE_INFINITY.invert());
-		assertEquals(ZERO, NEGATIVE_INFINITY.invert());
+	@ParameterizedTest
+	@MethodSource
+	void testIsZero(BigRational value, boolean result) {
+		assertEquals(result, value.isZero());
 	}
 	
-	@Test
-	public void testIsOne() {
-		assertFalse(new BigRational(992, 1012).isOne());
-		assertFalse(ZERO.isOne());
-		assertTrue(ONE.isOne());
-		assertFalse(NAN.isOne());
-		assertFalse(POSITIVE_INFINITY.isOne());
-		assertFalse(NEGATIVE_INFINITY.isOne());
+	static Stream<Arguments> testIsZero() {
+		return Stream.of(
+				Arguments.of(new BigRational(9922, 112), false),
+				Arguments.of(ZERO, true),
+				Arguments.of(ONE, false),
+				Arguments.of(NAN, false),
+				Arguments.of(POSITIVE_INFINITY, false),
+				Arguments.of(NEGATIVE_INFINITY, false));
 	}
 	
-	@Test
-	public void testMultiply() {
-		assertEquals(new BigRational(1, 4), new BigRational(3, 8).multiply(new BigRational(4, 6)));
-		assertEquals(ZERO, new BigRational(4, 8).multiply(0));
-		assertEquals(new BigRational(50, 3), new BigRational(25, 15).multiply(10));
-		assertEquals(ZERO, new BigRational(253, -7).multiply(0));
-		
-		assertEquals(NAN, NAN.multiply(5));
-		assertEquals(NAN, NAN.multiply(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.multiply(NAN));
-		
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.multiply(ONE));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.multiply(-35));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.multiply(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.multiply(ONE));
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.multiply(-31));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.multiply(NEGATIVE_INFINITY));
+	@ParameterizedTest
+	@MethodSource
+	void testAdd(BigRational summand1, BigRational summand2, BigRational result) {
+		assertEquals(result, summand1.add(summand2));
 	}
 	
-	@Test
-	public void testDivide() {
-		assertEquals(new BigRational(5, 64), new BigRational(3, 8).divide(new BigRational(24, 5)));
-		assertEquals(new BigRational(1, 6), new BigRational(4, 8).divide(3));
-		
-		assertEquals(NAN, NAN.divide(5));
-		assertEquals(NAN, NAN.divide(ONE));
-		assertEquals(NAN, POSITIVE_INFINITY.divide(NAN));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.divide(ONE));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.divide(-5));
-		assertEquals(NAN, POSITIVE_INFINITY.divide(POSITIVE_INFINITY));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.divide(ONE));
-		assertEquals(NEGATIVE_INFINITY, POSITIVE_INFINITY.divide(-11456));
-		assertEquals(NAN, NEGATIVE_INFINITY.divide(NEGATIVE_INFINITY));
-		assertEquals(ZERO, ONE.divide(NEGATIVE_INFINITY));
+	static Stream<Arguments> testAdd() {
+		return Stream.of(
+				Arguments.of(new BigRational(2, 4), new BigRational(2, 8), new BigRational(3, 4)),
+				Arguments.of(new BigRational(0, 1), new BigRational(0, 3400), new BigRational(0, 4)),
+				Arguments.of(new BigRational(13, 30), new BigRational(2, 30), new BigRational(1, 2)),
+				Arguments.of(
+						new BigRational(BigInteger.ONE, new BigInteger("111111111")),
+						new BigRational(111111111L),
+						new BigRational(new BigInteger("12345678987654322"), new BigInteger("111111111"))),
+				Arguments.of(new BigRational(1, Integer.MAX_VALUE), new BigRational(-1, Integer.MAX_VALUE), ZERO),
+				Arguments.of(new BigRational(Integer.MAX_VALUE), new BigRational(-Integer.MAX_VALUE), ZERO),
+				Arguments.of(ZERO, ZERO, ZERO),
+				Arguments.of(ONE, NAN, NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NEGATIVE_INFINITY),
+				
+				Arguments.of(new BigRational(17, 18), new BigRational(-19), new BigRational(-325, 18)),
+				Arguments.of(NAN, new BigRational(17), NAN),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(217), POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(99739), NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testPow() {
-		assertEquals(new BigRational(25, 81), new BigRational(-5, 9).pow(2));
-		assertEquals(new BigRational(27, 512), new BigRational(8, 3).pow(-3));
-		assertEquals(ONE, new BigRational(831).pow(0));
-		assertEquals(NAN, NAN.pow(72));
-		assertEquals(NEGATIVE_INFINITY, NEGATIVE_INFINITY.pow(93));
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.pow(94));
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.pow(95));
-		assertEquals(POSITIVE_INFINITY, ZERO.pow(-96));
-		assertEquals(ZERO, ZERO.pow(97));
+	@ParameterizedTest
+	@MethodSource
+	void testSubtract(BigRational minuend, BigRational subtrahend, BigRational result) {
+		assertEquals(result, minuend.subtract(subtrahend));
 	}
 	
-	@Test
-	public void testSignum() {
-		assertEquals(1, new BigRational(-417, -211).signum());
-		assertEquals(-1, new BigRational(new BigInteger("-123456789101112131415"), new BigInteger("1441223197")).signum());
-		assertEquals(-1, NEGATIVE_INFINITY.signum());
-		assertEquals(0, ZERO.signum());
-		assertEquals(0, NAN.signum());
-		assertEquals(1, POSITIVE_INFINITY.signum());
+	static Stream<Arguments> testSubtract() {
+		return Stream.of(
+				Arguments.of(new BigRational(2, 4), new BigRational(2, 8), new BigRational(1, 4)),
+				Arguments.of(new BigRational(0, 1), new BigRational(0, 3400), new BigRational(0, 4)),
+				Arguments.of(new BigRational(27, 50), new BigRational(2, 50), new BigRational(1, 2)),
+				Arguments.of(new BigRational(1, Integer.MAX_VALUE), new BigRational(1, Integer.MAX_VALUE), ZERO),
+				Arguments.of(new BigRational(Integer.MAX_VALUE), new BigRational(Integer.MAX_VALUE), ZERO),
+				Arguments.of(ONE, NAN, NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NEGATIVE_INFINITY),
+				
+				Arguments.of(new BigRational(100, 11), new BigRational(11), new BigRational(-21, 11)),
+				Arguments.of(NAN, new BigRational(17), NAN),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(217), POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(9973), NEGATIVE_INFINITY));
 	}
 	
-	@Test
-	public void testAbsolute() {
-		assertEquals(new BigRational(319, 12), new BigRational(319, -12).absolute());
-		assertEquals(new BigRational(320, 13), new BigRational(320, 13).absolute());
-		assertEquals(POSITIVE_INFINITY, NEGATIVE_INFINITY.absolute());
-		assertEquals(ZERO, ZERO.absolute());
-		assertEquals(NAN, NAN.absolute());
-		assertEquals(POSITIVE_INFINITY, POSITIVE_INFINITY.absolute());
+	@ParameterizedTest
+	@MethodSource
+	void testInvert(BigRational value, BigRational result) {
+		assertEquals(result, value.invert());
 	}
 	
-	@Test
-	public void testRound() {
-		assertEquals(BigInteger.valueOf(0), new BigRational(0).round());
-		assertEquals(BigInteger.valueOf(1000), new BigRational(1000).round());
-		assertEquals(BigInteger.valueOf(-1000), new BigRational(-1000).round());
-		
-		assertEquals(BigInteger.valueOf(-6), new BigRational(-6.75).ceil());
-		assertEquals(BigInteger.valueOf(-6), new BigRational(-6.75).round(RoundingMode.DOWN));
-		assertEquals(BigInteger.valueOf(-7), new BigRational(-6.75).floor());
-		assertEquals(BigInteger.valueOf(-7), new BigRational(-6.75).round(RoundingMode.HALF_DOWN));
-		assertEquals(BigInteger.valueOf(-7), new BigRational(-6.75).round(RoundingMode.HALF_EVEN));
-		assertEquals(BigInteger.valueOf(-7), new BigRational(-6.75).round());
-		assertEquals(BigInteger.valueOf(-7), new BigRational(-6.75).round(RoundingMode.UP));
-		
-		assertEquals(BigInteger.valueOf(-2), new BigRational(-2.5).ceil());
-		assertEquals(BigInteger.valueOf(-2), new BigRational(-2.5).round(RoundingMode.DOWN));
-		assertEquals(BigInteger.valueOf(-3), new BigRational(-2.5).floor());
-		assertEquals(BigInteger.valueOf(-2), new BigRational(-2.5).round(RoundingMode.HALF_DOWN));
-		assertEquals(BigInteger.valueOf(-2), new BigRational(-2.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(BigInteger.valueOf(-3), new BigRational(-2.5).round());
-		assertEquals(BigInteger.valueOf(-3), new BigRational(-2.5).round(RoundingMode.UP));
-		
-		assertEquals(BigInteger.valueOf(3), new BigRational(2.5).ceil());
-		assertEquals(BigInteger.valueOf(2), new BigRational(2.5).round(RoundingMode.DOWN));
-		assertEquals(BigInteger.valueOf(2), new BigRational(2.5).floor());
-		assertEquals(BigInteger.valueOf(2), new BigRational(2.5).round(RoundingMode.HALF_DOWN));
-		assertEquals(BigInteger.valueOf(2), new BigRational(2.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(BigInteger.valueOf(3), new BigRational(2.5).round());
-		assertEquals(BigInteger.valueOf(3), new BigRational(2.5).round(RoundingMode.UP));
-		
-		assertEquals(BigInteger.valueOf(-4), new BigRational(-3.5).round(RoundingMode.HALF_EVEN));
-		assertEquals(BigInteger.ZERO, NAN.round(RoundingMode.HALF_EVEN));
+	static Stream<Arguments> testInvert() {
+		return Stream.of(
+				Arguments.of(new BigRational(557, 26), new BigRational(26, 557)),
+				Arguments.of(ZERO, POSITIVE_INFINITY),
+				Arguments.of(NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ZERO),
+				Arguments.of(NEGATIVE_INFINITY, ZERO));
 	}
 	
-	@Test
-	public void testDoubleValue() {
-		assertEquals(Double.NaN, new BigRational(BigInteger.ZERO, BigInteger.ZERO).doubleValue(), 0);
-		assertEquals(Double.POSITIVE_INFINITY, new BigRational(BigInteger.ONE, BigInteger.ZERO).doubleValue(), 0);
-		assertEquals(Double.NEGATIVE_INFINITY, new BigRational(BigInteger.valueOf(-341233), BigInteger.ZERO).doubleValue(), 0);
-		assertEquals(9, new BigRational(BigInteger.valueOf(9)).doubleValue(), 0);
-		assertEquals(9000, new BigRational(BigInteger.valueOf(9000)).doubleValue(), 0);
-		assertEquals(-7, new BigRational(BigInteger.valueOf(-7)).doubleValue(), 0);
-		
+	@ParameterizedTest
+	@MethodSource
+	void testIsOne(BigRational value, boolean result) {
+		assertEquals(result, value.isOne());
+	}
+	
+	static Stream<Arguments> testIsOne() {
+		return Stream.of(
+				Arguments.of(new BigRational(992, 1012), false),
+				Arguments.of(ZERO, false),
+				Arguments.of(ONE, true),
+				Arguments.of(NAN, false),
+				Arguments.of(POSITIVE_INFINITY, false),
+				Arguments.of(NEGATIVE_INFINITY, false));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiply(BigRational factor1, BigRational factor2, BigRational result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiply() {
+		return Stream.of(
+				Arguments.of(new BigRational(3, 8), new BigRational(4, 6), new BigRational(1, 4)),
+				Arguments.of(new BigRational(4, 8), ZERO, ZERO),
+				Arguments.of(new BigRational(25, 15), new BigRational(10), new BigRational(50, 3)),
+				Arguments.of(new BigRational(253, -7), ZERO, ZERO),
+				Arguments.of(NAN, new BigRational(5), NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ONE, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(-35), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, ONE, NEGATIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(-31), NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivide(BigRational dividend, BigRational divisor, BigRational result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivide() {
+		return Stream.of(
+				Arguments.of(new BigRational(3, 8), new BigRational(24, 5), new BigRational(5, 64)),
+				Arguments.of(new BigRational(4, 8), new BigRational(3), new BigRational(1, 6)),
+				Arguments.of(NAN, new BigRational(5), NAN),
+				Arguments.of(NAN, ONE, NAN),
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, ONE, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(-5), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				Arguments.of(NEGATIVE_INFINITY, ONE, NEGATIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(-11456), NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(ONE, NEGATIVE_INFINITY, ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testPow(BigRational base, int exponent, BigRational result) {
+		assertEquals(result, base.pow(exponent));
+	}
+	
+	static Stream<Arguments> testPow() {
+		return Stream.of(
+				Arguments.of(new BigRational(-5, 9), 2, new BigRational(25, 81)),
+				Arguments.of(new BigRational(8, 3), -3, new BigRational(27, 512)),
+				Arguments.of(new BigRational(831), 0, ONE),
+				Arguments.of(NAN, 72, NAN),
+				Arguments.of(NEGATIVE_INFINITY, 93, NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, 94, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, 95, POSITIVE_INFINITY),
+				Arguments.of(ZERO, -96, POSITIVE_INFINITY),
+				Arguments.of(ZERO, 97, ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSignum(BigRational value, int result) {
+		assertEquals(result, value.signum());
+	}
+	
+	static Stream<Arguments> testSignum() {
+		return Stream.of(
+				Arguments.of(new BigRational(-417, -211), 1),
+				Arguments.of(new BigRational(new BigInteger("-1234567891011121314"), new BigInteger("1441223197")), -1),
+				Arguments.of(NEGATIVE_INFINITY, -1),
+				Arguments.of(ZERO, 0),
+				Arguments.of(NAN, 0),
+				Arguments.of(POSITIVE_INFINITY, 1));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testAbsolute(BigRational value, BigRational result) {
+		assertEquals(result, value.absolute());
+	}
+	
+	static Stream<Arguments> testAbsolute() {
+		return Stream.of(
+				Arguments.of(new BigRational(319, -12), new BigRational(319, 12)),
+				Arguments.of(new BigRational(320, 13), new BigRational(320, 13)),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(ZERO, ZERO),
+				Arguments.of(NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testRound(BigRational value, RoundingMode roundingMode, BigInteger result) {
+		assertEquals(result, value.round(roundingMode));
+	}
+	
+	static Stream<Arguments> testRound() {
+		return Stream.of(
+				Arguments.of(new BigRational(0), RoundingMode.HALF_UP, BigInteger.valueOf(0)),
+				Arguments.of(new BigRational(1000), RoundingMode.HALF_UP, BigInteger.valueOf(1000)),
+				Arguments.of(new BigRational(-1000), RoundingMode.HALF_UP, BigInteger.valueOf(-1000)),
+				
+				Arguments.of(new BigRational(-6.75), RoundingMode.DOWN, BigInteger.valueOf(-6)),
+				Arguments.of(new BigRational(-6.75), RoundingMode.HALF_DOWN, BigInteger.valueOf(-7)),
+				Arguments.of(new BigRational(-6.75), RoundingMode.HALF_EVEN, BigInteger.valueOf(-7)),
+				Arguments.of(new BigRational(-6.75), RoundingMode.HALF_UP, BigInteger.valueOf(-7)),
+				Arguments.of(new BigRational(-6.75), RoundingMode.UP, BigInteger.valueOf(-7)),
+				
+				Arguments.of(new BigRational(-2.5), RoundingMode.DOWN, BigInteger.valueOf(-2)),
+				Arguments.of(new BigRational(-2.5), RoundingMode.HALF_DOWN, BigInteger.valueOf(-2)),
+				Arguments.of(new BigRational(-2.5), RoundingMode.HALF_EVEN, BigInteger.valueOf(-2)),
+				Arguments.of(new BigRational(-2.5), RoundingMode.HALF_UP, BigInteger.valueOf(-3)),
+				Arguments.of(new BigRational(-2.5), RoundingMode.UP, BigInteger.valueOf(-3)),
+				
+				Arguments.of(new BigRational(2.5), RoundingMode.DOWN, BigInteger.valueOf(2)),
+				Arguments.of(new BigRational(2.5), RoundingMode.HALF_DOWN, BigInteger.valueOf(2)),
+				Arguments.of(new BigRational(2.5), RoundingMode.HALF_EVEN, BigInteger.valueOf(2)),
+				Arguments.of(new BigRational(2.5), RoundingMode.HALF_UP, BigInteger.valueOf(3)),
+				Arguments.of(new BigRational(2.5), RoundingMode.UP, BigInteger.valueOf(3)),
+				
+				Arguments.of(new BigRational(-3.5), RoundingMode.HALF_EVEN, BigInteger.valueOf(-4)),
+				Arguments.of(NAN, RoundingMode.HALF_EVEN, BigInteger.ZERO));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testCeil(BigRational value, BigInteger result) {
+		assertEquals(result, value.ceil());
+	}
+	
+	static Stream<Arguments> testCeil() {
+		return Stream.of(
+				Arguments.of(new BigRational(-6.75), BigInteger.valueOf(-6)),
+				Arguments.of(new BigRational(-2.5), BigInteger.valueOf(-2)),
+				Arguments.of(new BigRational(2.5), BigInteger.valueOf(3)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testFloor(BigRational value, BigInteger result) {
+		assertEquals(result, value.floor());
+	}
+	
+	static Stream<Arguments> testFloor() {
+		return Stream.of(
+				Arguments.of(new BigRational(-6.75), BigInteger.valueOf(-7)),
+				Arguments.of(new BigRational(-2.5), BigInteger.valueOf(-3)),
+				Arguments.of(new BigRational(2.5), BigInteger.valueOf(2)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDoubleValue(BigRational value, double result) {
+		assertEquals(result, value.doubleValue());
+	}
+	
+	static Stream<Arguments> testDoubleValue() {
 		BigInteger nonillionPlusOne = BigInteger.TEN.pow(30).add(BigInteger.ONE);
 		BigInteger octillion = BigInteger.TEN.pow(27);
-		assertEquals(1000, new BigRational(nonillionPlusOne, octillion).doubleValue(), 0);
-		assertEquals(0.001, new BigRational(1, 1000).doubleValue(), 0);
-		assertEquals(0.001, new BigRational(octillion, nonillionPlusOne).doubleValue(), 0);
-		
 		BigInteger nonillionMinusOne = BigInteger.TEN.pow(30).subtract(BigInteger.ONE);
-		assertEquals(1000, new BigRational(nonillionMinusOne, octillion).doubleValue(), 0);
-		assertEquals(0.001, new BigRational(octillion, nonillionMinusOne).doubleValue(), 0);
-		
-		assertEquals(Math.pow(2, Double.MAX_EXPONENT), new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT)).doubleValue(), 0);
-		assertEquals(Double.POSITIVE_INFINITY, new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT+1)).doubleValue(), 0);
-		assertEquals(Double.NEGATIVE_INFINITY, new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT+1), BigInteger.valueOf(-1)).doubleValue(), 0);
-		assertEquals(0, new BigRational(BigInteger.TWO, BigInteger.valueOf(-3949113).pow(50)).doubleValue(), 0);
-		assertEquals(Double.MIN_VALUE, new BigRational(BigInteger.ONE, BigInteger.TWO.pow(-Double.MIN_EXPONENT+52)).doubleValue(), 0);
-		assertEquals(0, new BigRational(BigInteger.ONE, BigInteger.TWO.pow(-Double.MIN_EXPONENT+52+1)).doubleValue(), 0);
-	}
-
-	@Test
-	public void testFloatValue() {
-		assertEquals(41000.0/37, new BigRational(41000, 37).floatValue(), 1e-3);
-		assertEquals(Float.NaN, NAN.floatValue(), 1e-3);
-		assertEquals(Float.POSITIVE_INFINITY, POSITIVE_INFINITY.floatValue(), 1e-3);
-		assertEquals(Float.NEGATIVE_INFINITY, NEGATIVE_INFINITY.floatValue(), 1e-3);
-	}
-
-	@Test
-	public void testIntValue() {
-		assertEquals(103/9, new BigRational(103, 9).intValue());
-		assertEquals(0, new BigRational(-7, 101).intValue());
-	}
-
-	@Test
-	public void testLongValue() {
-		assertEquals(103L/9, new BigRational(103, 9).longValue());
-		assertEquals(0L, new BigRational(-7, 101).longValue());
+		return Stream.of(
+				Arguments.of(new BigRational(BigInteger.ZERO, BigInteger.ZERO), Double.NaN),
+				Arguments.of(new BigRational(BigInteger.ONE, BigInteger.ZERO), Double.POSITIVE_INFINITY),
+				Arguments.of(new BigRational(BigInteger.valueOf(-341233), BigInteger.ZERO), Double.NEGATIVE_INFINITY),
+				Arguments.of(new BigRational(BigInteger.valueOf(9)), 9),
+				Arguments.of(new BigRational(BigInteger.valueOf(9000)), 9000),
+				Arguments.of(new BigRational(BigInteger.valueOf(-7)), -7),
+				Arguments.of(new BigRational(nonillionPlusOne, octillion), 1000),
+				Arguments.of(new BigRational(1, 1000), 0.001),
+				Arguments.of(new BigRational(octillion, nonillionPlusOne), 0.001),
+				Arguments.of(new BigRational(nonillionMinusOne, octillion), 1000),
+				Arguments.of(new BigRational(octillion, nonillionMinusOne), 0.001),
+				Arguments
+						.of(new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT)), Math.pow(2, Double.MAX_EXPONENT)),
+				Arguments.of(new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT + 1)), Double.POSITIVE_INFINITY),
+				Arguments.of(
+						new BigRational(BigInteger.TWO.pow(Double.MAX_EXPONENT + 1), BigInteger.valueOf(-1)),
+						Double.NEGATIVE_INFINITY),
+				Arguments.of(new BigRational(BigInteger.TWO, BigInteger.valueOf(-3949113).pow(50)), 0),
+				Arguments.of(
+						new BigRational(BigInteger.ONE, BigInteger.TWO.pow(-Double.MIN_EXPONENT + 52)),
+						Double.MIN_VALUE),
+				Arguments.of(new BigRational(BigInteger.ONE, BigInteger.TWO.pow(-Double.MIN_EXPONENT + 52 + 1)), 0));
 	}
 	
-	@Test
-	public void testCompareTo() {
-		assertEquals(1, new BigRational(-3, 99).compareTo(new BigRational(-4, 100)));
-		assertEquals(-1,
-				new BigRational(Integer.MAX_VALUE, Integer.MAX_VALUE-1)
-				.compareTo(new BigRational(Integer.MAX_VALUE-1, Integer.MAX_VALUE-2)));
-		assertEquals(0, ZERO.compareTo(ZERO));
-		assertEquals(-1, ZERO.compareTo(ONE));
-		assertEquals(1, ONE.compareTo(ZERO));
-		assertEquals(-1, ONE.compareTo(POSITIVE_INFINITY));
-		assertEquals(1, ONE.compareTo(NEGATIVE_INFINITY));
-		assertEquals(-1, ONE.compareTo(NAN));
-		assertEquals(1, NAN.compareTo(NEGATIVE_INFINITY));
-		assertEquals(-1, POSITIVE_INFINITY.compareTo(NAN));
-		assertEquals(1, POSITIVE_INFINITY.compareTo(ONE));
+	@ParameterizedTest
+	@MethodSource
+	void testFloatValue(BigRational value, float result) {
+		assertEquals(result, value.floatValue(), 1e-3);
+	}
+	
+	static Stream<Arguments> testFloatValue() {
+		return Stream.of(
+				Arguments.of(new BigRational(41000, 37), 41000f / 37),
+				Arguments.of(NAN, Float.NaN),
+				Arguments.of(POSITIVE_INFINITY, Float.POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, Float.NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIntValue(BigRational value, int result) {
+		assertEquals(result, value.intValue());
+	}
+	
+	static Stream<Arguments> testIntValue() {
+		return Stream.of(
+				Arguments.of(new BigRational(103, 9), 103 / 9),
+				Arguments.of(new BigRational(-7, 101), 0));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testLongValue(BigRational value, long result) {
+		assertEquals(result, value.longValue());
+	}
+	
+	static Stream<Arguments> testLongValue() {
+		return Stream.of(
+				Arguments.of(new BigRational(103, 9), 103L / 9),
+				Arguments.of(new BigRational(-7, 101), 0L));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testCompareTo(BigRational value1, BigRational value2, int result) {
+		assertEquals(result, value1.compareTo(value2));
+	}
+	
+	static Stream<Arguments> testCompareTo() {
+		return Stream.of(
+				Arguments.of(new BigRational(-3, 99), new BigRational(-4, 100), 1),
+				Arguments.of(
+						new BigRational(Integer.MAX_VALUE, Integer.MAX_VALUE - 1),
+						new BigRational(Integer.MAX_VALUE - 1, Integer.MAX_VALUE - 2),
+						-1),
+				Arguments.of(ZERO, ZERO, 0),
+				Arguments.of(ZERO, ONE, -1),
+				Arguments.of(ONE, ZERO, 1),
+				Arguments.of(ONE, POSITIVE_INFINITY, -1),
+				Arguments.of(ONE, NEGATIVE_INFINITY, 1),
+				Arguments.of(ONE, NAN, -1),
+				Arguments.of(NAN, NEGATIVE_INFINITY, 1),
+				Arguments.of(POSITIVE_INFINITY, NAN, -1),
+				Arguments.of(POSITIVE_INFINITY, ONE, 1));
 	}
 }

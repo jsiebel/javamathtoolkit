@@ -2,309 +2,289 @@ package jamato.polynomial;
 
 import static jamato.polynomial.DoublePolynomial.valueOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import org.junit.jupiter.api.Test;
+import java.util.stream.Stream;
 
-public class DoublePolynomialTest {
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-	@Test
-	public void testIntConstructor() {
-		DoublePolynomial polynomial1 = new DoublePolynomial(0);
-		assertEquals(0, polynomial1.getDegree());
-		assertEquals(0, polynomial1.getCoefficient(0), 0);
-		assertEquals(0, polynomial1.getCoefficient(1), 0);
-		
-		DoublePolynomial polynomial2 = new DoublePolynomial(1, 2, 4);
-		assertEquals(2, polynomial2.getDegree());
-		assertEquals(1, polynomial2.getCoefficient(0), 0);
-		assertEquals(2, polynomial2.getCoefficient(1), 0);
-		assertEquals(4, polynomial2.getCoefficient(2), 0);
-		assertEquals(0, polynomial2.getCoefficient(3), 0);
-
-		DoublePolynomial polynomial3 = new DoublePolynomial(1, 2, 4, 0, 0);
-		assertEquals(2, polynomial3.getDegree());
-		assertEquals(2, polynomial3.getDegree());
-
-		DoublePolynomial polynomial4 = new DoublePolynomial(1, 0);
-		assertEquals(0, polynomial4.getDegree());
-		assertEquals(0, polynomial4.getDegree());
-
-		DoublePolynomial polynomial5 = new DoublePolynomial(0, 0);
-		assertEquals(0, polynomial5.getDegree());
-		assertEquals(polynomial1, polynomial5);
+class DoublePolynomialTest {
+	
+	@ParameterizedTest
+	@MethodSource
+	void testIntConstructor(double[] coefficients, int resultDegree, double[] resultCoefficients) {
+		DoublePolynomial doublePolynomial = new DoublePolynomial(coefficients);
+		assertEquals(resultDegree, doublePolynomial.getDegree());
+		for (int i = 0; i < resultCoefficients.length; i++) {
+			assertEquals(resultCoefficients[i], doublePolynomial.getCoefficient(i));
+		}
 	}
 	
-	@Test
-	public void testdoubleConstructor() {
-		DoublePolynomial polynomial1 = new DoublePolynomial(0);
-		assertEquals(0, polynomial1.getDegree());
-		
-		DoublePolynomial polynomial2 = new DoublePolynomial(0, 0.5);
-		assertEquals(1, polynomial2.getDegree());
-		
-		DoublePolynomial polynomial3 = new DoublePolynomial(0, 0);
-		assertEquals(0, polynomial3.getDegree());
-		
-		DoublePolynomial polynomial4 = new DoublePolynomial(0, 4, 0.5, 0.5);
-		assertEquals(3, polynomial4.getDegree());
+	static Stream<Arguments> testIntConstructor() {
+		return Stream.of(
+				Arguments.of(new double[] { 0 }, 0, new double[] { 0, 0 }),
+				Arguments.of(new double[] { 1, 2, 4 }, 2, new double[] { 1, 2, 4, 0 }),
+				Arguments.of(new double[] { 1, 2, 4, 0, 0 }, 2, new double[] {}),
+				Arguments.of(new double[] { 1, 0 }, 0, new double[] {}),
+				Arguments.of(new double[] { 0, 0 }, 0, new double[] { 0, 0 }));
 	}
 	
-	@Test
-	public void testStringConstructor() {
-		assertEquals(new DoublePolynomial(-0.123), valueOf("-0.123"));
-		assertEquals(new DoublePolynomial(1, -2), valueOf("-2x+1"));
-		assertEquals(new DoublePolynomial(-3, 0, 5), valueOf("5x^2-3"));
-		assertEquals(new DoublePolynomial(0.5, 0, 4, 0.5), valueOf("0.5A³+0.5+4x²"));
-		assertEquals(new DoublePolynomial(0), valueOf("-0.25 t² + 0.75 t^2 + 0 - 0.5 t² + 0t^15"));
+	@ParameterizedTest
+	@MethodSource
+	void testGetDegree(DoublePolynomial DoublePolynomial, int result) {
+		assertEquals(result, DoublePolynomial.getDegree());
 	}
 	
-	@Test
-	public void testIsZero() {
-		assertTrue(DoublePolynomial.ZERO.isZero());
-		assertFalse(new DoublePolynomial(-4).isZero());
-		assertFalse(new DoublePolynomial(0, 117).isZero());
+	static Stream<Arguments> testGetDegree() {
+		return Stream.of(
+				Arguments.of(new DoublePolynomial(0), 0),
+				Arguments.of(new DoublePolynomial(0, 0.5), 1),
+				Arguments.of(new DoublePolynomial(0, 0), 0),
+				Arguments.of(new DoublePolynomial(0, 4, 0.5, 0.5), 3));
 	}
 	
-	@Test
-	public void testNegate() {
-		assertEquals(DoublePolynomial.ZERO, DoublePolynomial.ZERO.negate());
-		assertEquals(new DoublePolynomial(3, -11, 0, 2.25), new DoublePolynomial(-3, 11, 0, -2.25).negate());
+	@ParameterizedTest
+	@MethodSource
+	void testValueOf(String string, DoublePolynomial result) {
+		assertEquals(result, valueOf(string));
 	}
 	
-	@Test
-	public void testAdd() {
-		assertEquals(
-				valueOf("6"),
-				valueOf("2x+4").add(valueOf("-2x+2"))
-				);
-		assertEquals(
-				new DoublePolynomial(1),
-				new DoublePolynomial(0.5).add(new DoublePolynomial(0.5))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("4x²+3x+2").add(valueOf("-4x²-3x-2"))
-				);
-		assertEquals(
-				valueOf("3x²+7x+5"),
-				valueOf("3x²+2x+1").add(valueOf("5x+4"))
-				);
-		assertEquals(
-				valueOf("5x+5"),
-				new DoublePolynomial(1).add(valueOf("5x+4"))
-				);
+	static Stream<Arguments> testValueOf() {
+		return Stream.of(
+				Arguments.of("-0.123", new DoublePolynomial(-0.123)),
+				Arguments.of("-2x+1", new DoublePolynomial(1, -2)),
+				Arguments.of("5x^2-3", new DoublePolynomial(-3, 0, 5)),
+				Arguments.of("0.5A³+0.5+4x²", new DoublePolynomial(0.5, 0, 4, 0.5)),
+				Arguments.of("-0.25 t² + 0.75 t^2 + 0 - 0.5 t² + 0t^15", new DoublePolynomial(0)));
 	}
 	
-	@Test
-	public void testSubtract() {
-		assertEquals(
-				valueOf("4x+2"),
-				valueOf("2x+4").subtract(valueOf("-2x+2"))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				new DoublePolynomial(0.5).subtract(new DoublePolynomial(0.5))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("4x²+3x+2").subtract(valueOf("4x²+3x+2"))
-				);
-		assertEquals(
-				valueOf("3x²-3x-3"),
-				valueOf("3x²+2x+1").subtract(valueOf("5x+4"))
-				);
-		assertEquals(
-				valueOf("-5x-3"),
-				new DoublePolynomial(1).subtract(valueOf("5x+4"))
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testIsZero(DoublePolynomial doublePolynomial, boolean result) {
+		assertEquals(result, doublePolynomial.isZero());
 	}
 	
-	@Test
-	public void testIsOne() {
-		assertTrue(DoublePolynomial.ONE.isOne());
-		assertFalse(new DoublePolynomial(-4).isOne());
-		assertFalse(new DoublePolynomial(0, 117).isOne());
+	static Stream<Arguments> testIsZero() {
+		return Stream.of(
+				Arguments.of(DoublePolynomial.ZERO, true),
+				Arguments.of(new DoublePolynomial(-4), false),
+				Arguments.of(new DoublePolynomial(0, 117), false));
 	}
 	
-	@Test
-	public void testMultiply() {
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("4x³+3x²+2x+1").multiply(valueOf("0x+0"))
-				);
-		assertEquals(
-				new DoublePolynomial(0.5, 1, 0.5),
-				new DoublePolynomial(0.5, 0.5).multiply(new DoublePolynomial(1, 1))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("5x^4+4x³+3x²+2x+1").multiply(0)
-				);
-		assertEquals(
-				new DoublePolynomial(0.5, 1, 0.5, 1),
-				new DoublePolynomial(1, 2, 1, 2).multiply(new DoublePolynomial(0.5))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("6x^5+5x^4+4x³+3x²+2x+1").multiply(0)
-				);
-		assertEquals(
-				valueOf("-1200x³-1000x²-800x-600"),
-				valueOf("6x³+5x²+4x+3").multiply(-200)
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("4x^5-33").multiply(0)
-				);
-		assertEquals(
-				new DoublePolynomial(Double.MIN_VALUE),
-				new DoublePolynomial(1, 0, Double.MIN_VALUE).multiply(Double.MIN_VALUE)
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testNegate(DoublePolynomial doublePolynomial, DoublePolynomial result) {
+		assertEquals(result, doublePolynomial.negate());
 	}
 	
-	@Test
-	public void testDivide() {
-		assertEquals(
-				valueOf("10x³+10x²+20x+10"),
-				valueOf("110x³+110x²+220x+110").divide(11)
-				);
-		assertEquals(
-				valueOf("8x³+6x²+4x+2"),
-				valueOf("4x³+3x²+2x+1").divide(new DoublePolynomial(0.5))
-				);
-		assertEquals(
-				valueOf("x+1"),
-				valueOf("x²+2x+1").divide(valueOf("x+1"))
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				valueOf("5x³+9x²+7x+3").divide(valueOf("x^4+5x³+6x²+2"))
-				);
-		assertEquals(
-				valueOf("-5x^7+4.43x"),
-				valueOf("5x^7-4.43x").divide(-1)
-				);
-		assertEquals(
-				new DoublePolynomial(1.0/7.13),
-				new DoublePolynomial(1, 0, Double.MIN_VALUE).divide(7.13)
-				);
-		assertEquals(
-				new DoublePolynomial(Double.NaN),
-				new DoublePolynomial(0).divide(0)
-				);
+	static Stream<Arguments> testNegate() {
+		return Stream.of(
+				Arguments.of(DoublePolynomial.ZERO, DoublePolynomial.ZERO),
+				Arguments.of(new DoublePolynomial(-3, 11, 0, -2.25), new DoublePolynomial(3, -11, 0, 2.25)));
 	}
 	
-	@Test
-	public void testSubstitute() {
-		assertEquals(
-				valueOf("x+2"),
-				valueOf("x+1").substitute(valueOf("x+1"))
-				);
-		double[] coefficients = { 0.5, 2 };
-		
-		// (2x+1/2)² + 2(2x+1/2) + 4 = 4x² + 6x + 21/4
-		assertEquals(
-				valueOf("4x²+6x+5.25"),
-				valueOf("x²+2x+4").substitute(new DoublePolynomial(coefficients))
-				);
-		
-		assertEquals(
-				valueOf("3"),
-				valueOf("3").substitute(valueOf("34.4x^33-2.910x^14"))
-				);
-		double[] coefficients1 = { 0 };
-		
-		assertEquals(
-				valueOf("97"),
-				valueOf("33.2x^4+0.001x^2+97").substitute(new DoublePolynomial(coefficients1))
-				);
-		double[] coefficients2 = { 1 };
-		
-		assertEquals(
-				valueOf("40"),
-				valueOf("10x^5+28.5x+1.5").substitute(new DoublePolynomial(coefficients2))
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testAdd(DoublePolynomial summand1, DoublePolynomial summand2, DoublePolynomial result) {
+		assertEquals(result, summand1.add(summand2));
 	}
 	
-	@Test
-	public void testPow() {
-		assertEquals(
-				valueOf("1"),
-				valueOf("x³+6x²+12x+8").pow(0)
-				);
-		assertEquals(
-				valueOf("1"),
-				valueOf("1").pow(Integer.MAX_VALUE)
-				);
-		assertEquals(
-				valueOf("x³+6x²+12x+8"),
-				valueOf("x+2").pow(3)
-				);
+	static Stream<Arguments> testAdd() {
+		return Stream.of(
+				Arguments.of(valueOf("2x+4"), valueOf("-2x+2"), valueOf("6")),
+				Arguments.of(new DoublePolynomial(0.5), new DoublePolynomial(0.5), new DoublePolynomial(1)),
+				Arguments.of(valueOf("4x²+3x+2"), valueOf("-4x²-3x-2"), new DoublePolynomial(0)),
+				Arguments.of(valueOf("3x²+2x+1"), valueOf("5x+4"), valueOf("3x²+7x+5")),
+				Arguments.of(new DoublePolynomial(1), valueOf("5x+4"), valueOf("5x+5")));
 	}
 	
-	@Test
-	public void testDerivative() {
-		assertEquals(
-				new DoublePolynomial(0 ),
-				new DoublePolynomial(0 ).derivative()
-				);
-		assertEquals(
-				new DoublePolynomial(0),
-				new DoublePolynomial(1.22 ).derivative()
-				);
-		assertEquals(
-				valueOf("15x^9+4x+15"),
-				valueOf("1.5x^10+2x²+15x+0.121").derivative()
-				);
+	@ParameterizedTest
+	@MethodSource
+	void testSubtract(DoublePolynomial minuend, DoublePolynomial subtrahend, DoublePolynomial result) {
+		assertEquals(result, minuend.subtract(subtrahend));
 	}
 	
-	@Test
-	public void testApply() {
-		assertEquals(
-				0,
-				valueOf("33x³").applyAsDouble(0),
-				0
-				);
-		assertEquals(
-				-1,
-				valueOf("0.25x^3-1.25").applyAsDouble(1),
-				0
-				);
-		assertEquals(
-				3333,
-				valueOf("3x³+3x²+3x+3").applyAsDouble(10),
-				0
-				);
+	static Stream<Arguments> testSubtract() {
+		return Stream.of(
+				Arguments.of(valueOf("2x+4"), valueOf("-2x+2"), valueOf("4x+2")),
+				Arguments.of(new DoublePolynomial(0.5), new DoublePolynomial(0.5), new DoublePolynomial(0)),
+				Arguments.of(valueOf("4x²+3x+2"), valueOf("4x²+3x+2"), new DoublePolynomial(0)),
+				Arguments.of(valueOf("3x²+2x+1"), valueOf("5x+4"), valueOf("3x²-3x-3")),
+				Arguments.of(new DoublePolynomial(1), valueOf("5x+4"), valueOf("-5x-3")));
 	}
 	
-	@Test
-	public void testEquals() {
-		assertEquals(new DoublePolynomial(1, 2, 3), new DoublePolynomial(1, 2, 3));
-		assertNotEquals(new DoublePolynomial(1, 2, 3), new DoublePolynomial(0, 1, 2, 3));
-		assertEquals(new DoublePolynomial(1, -0.0, 1), new DoublePolynomial(1, 0.0, 1));
+	@ParameterizedTest
+	@MethodSource
+	void testIsOne(DoublePolynomial doublePolynomial, boolean result) {
+		assertEquals(result, doublePolynomial.isOne());
 	}
 	
-	@Test
-	public void testHashcode() {
-		assertEquals(new DoublePolynomial(1, 2, 3).hashCode(), new DoublePolynomial(1, 2, 3).hashCode());
-		assertNotEquals(new DoublePolynomial(1, 2, 3).hashCode(), new DoublePolynomial(0, 1, 2, 3).hashCode());
-		assertEquals(new DoublePolynomial(1, -0.0, 1).hashCode(), new DoublePolynomial(1, 0.0, 1).hashCode());
+	static Stream<Arguments> testIsOne() {
+		return Stream.of(
+				Arguments.of(DoublePolynomial.ONE, true),
+				Arguments.of(new DoublePolynomial(-4), false),
+				Arguments.of(new DoublePolynomial(0, 117), false));
 	}
 	
-	@Test
-	public void testToString() {
-		assertEquals("0.0", valueOf("0").toString());
-		assertEquals("0.5", valueOf("0.5").toString());
-		assertEquals("-1.0", valueOf("-1").toString());
-		assertEquals("x", valueOf("x").toString());
-		assertEquals("x + 1.0", valueOf("x+1").toString());
-		assertEquals("x - 2.0", valueOf("-2+x").toString());
-		assertEquals("-x + 3.0", valueOf("3-x").toString());
-		assertEquals("-x - 4.0", valueOf("-x-4").toString());
-		assertEquals("2.0 x² + x - 1.0", valueOf("-1+x+2x^2").toString());
-		assertEquals("-5.0 x^4 - 4.0 x³ + 3.0 x² - x + 1.0", valueOf("-5 x^4 - 4 x³ + 3 x² - x + 1").toString());
+	@ParameterizedTest
+	@MethodSource
+	void testMultiply(DoublePolynomial factor1, DoublePolynomial factor2, DoublePolynomial result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiply() {
+		return Stream.of(
+				Arguments.of(valueOf("4x³+3x²+2x+1"), valueOf("0x+0"), new DoublePolynomial(0)),
+				Arguments.of(
+						new DoublePolynomial(0.5, 0.5),
+						new DoublePolynomial(1, 1),
+						new DoublePolynomial(0.5, 1, 0.5)),
+				Arguments.of(
+						new DoublePolynomial(1, 2, 1, 2),
+						new DoublePolynomial(0.5),
+						new DoublePolynomial(0.5, 1, 0.5, 1)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testMultiplyByDouble(DoublePolynomial factor1, double factor2, DoublePolynomial result) {
+		assertEquals(result, factor1.multiply(factor2));
+	}
+	
+	static Stream<Arguments> testMultiplyByDouble() {
+		return Stream.of(
+				Arguments.of(valueOf("5x^4+4x³+3x²+2x+1"), 0, new DoublePolynomial(0)),
+				Arguments.of(valueOf("6x^5+5x^4+4x³+3x²+2x+1"), 0, new DoublePolynomial(0)),
+				Arguments.of(valueOf("6x³+5x²+4x+3"), -200, valueOf("-1200x³-1000x²-800x-600")),
+				Arguments.of(valueOf("4x^5-33"), 0, new DoublePolynomial(0)),
+				Arguments.of(new DoublePolynomial(1, 0, Double.MIN_VALUE), 0.1, new DoublePolynomial(0.1)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivide(DoublePolynomial dividend, DoublePolynomial divisor, DoublePolynomial result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivide() {
+		return Stream.of(
+				Arguments.of(valueOf("4x³+3x²+2x+1"), new DoublePolynomial(0.5), valueOf("8x³+6x²+4x+2")),
+				Arguments.of(valueOf("x²+2x+1"), valueOf("x+1"), valueOf("x+1")),
+				Arguments.of(valueOf("5x³+9x²+7x+3"), valueOf("x^4+5x³+6x²+2"), new DoublePolynomial(0)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDivideByDouble(DoublePolynomial dividend, double divisor, DoublePolynomial result) {
+		assertEquals(result, dividend.divide(divisor));
+	}
+	
+	static Stream<Arguments> testDivideByDouble() {
+		return Stream.of(
+				Arguments.of(valueOf("110x³+110x²+220x+110"), 11, valueOf("10x³+10x²+20x+10")),
+				Arguments.of(new DoublePolynomial(1, 0, Double.MIN_VALUE), 7.13, new DoublePolynomial(1.0 / 7.13)),
+				Arguments.of(new DoublePolynomial(0), 0, new DoublePolynomial(Double.NaN)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSubstitute(DoublePolynomial doublePolynomial, DoublePolynomial substituent, DoublePolynomial result) {
+		assertEquals(result, doublePolynomial.substitute(substituent));
+	}
+	
+	static Stream<Arguments> testSubstitute() {
+		return Stream.of(
+				Arguments.of(valueOf("x+1"), valueOf("x+1"), valueOf("x+2")),
+				// (2x+1/2)² + 2(2x+1/2) + 4 = 4x² + 6x + 21/4
+				Arguments.of(valueOf("x²+2x+4"), new DoublePolynomial(new double[] { 0.5, 2 }), valueOf("4x²+6x+5.25")),
+				Arguments.of(valueOf("3"), valueOf("34.4x^33-2.910x^14"), valueOf("3")),
+				Arguments.of(valueOf("33.2x^4+0.001x^2+97"), DoublePolynomial.ZERO, valueOf("97")),
+				Arguments.of(valueOf("10x^5+28.5x+1.5"), DoublePolynomial.ONE, valueOf("40")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testPow(DoublePolynomial base, int exponent, DoublePolynomial result) {
+		assertEquals(result, base.pow(exponent));
+	}
+	
+	static Stream<Arguments> testPow() {
+		return Stream.of(
+				Arguments.of(valueOf("x³+6x²+12x+8"), 0, valueOf("1")),
+				Arguments.of(valueOf("1"), Integer.MAX_VALUE, valueOf("1")),
+				Arguments.of(valueOf("x+2"), 3, valueOf("x³+6x²+12x+8")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testDerivative(DoublePolynomial doublePolynomial, DoublePolynomial result) {
+		assertEquals(result, doublePolynomial.derivative());
+	}
+	
+	static Stream<Arguments> testDerivative() {
+		return Stream.of(
+				Arguments.of(new DoublePolynomial(0), new DoublePolynomial(0)),
+				Arguments.of(new DoublePolynomial(1.22), new DoublePolynomial(0)),
+				Arguments.of(valueOf("1.5x^10+2x²+15x+0.121"), valueOf("15x^9+4x+15")));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testApply(DoublePolynomial doublePolynomial, double x, double result) {
+		assertEquals(result, doublePolynomial.applyAsDouble(x), 0);
+	}
+	
+	static Stream<Arguments> testApply() {
+		return Stream.of(
+				Arguments.of(valueOf("33x³"), 0, 0),
+				Arguments.of(valueOf("0.25x^3-1.25"), 1, -1),
+				Arguments.of(valueOf("3x³+3x²+3x+3"), 10, 3333));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testEquals(DoublePolynomial doublePolynomial1, DoublePolynomial doublePolynomial2, boolean result) {
+		assertEquals(result, doublePolynomial1.equals(doublePolynomial2));
+	}
+	
+	static Stream<Arguments> testEquals() {
+		return Stream.of(
+				Arguments.of(new DoublePolynomial(1, 2, 3), new DoublePolynomial(1, 2, 3), true),
+				Arguments.of(new DoublePolynomial(1, 2, 3), new DoublePolynomial(0, 1, 2, 3), false),
+				Arguments.of(new DoublePolynomial(1, -0.0, 1), new DoublePolynomial(1, 0.0, 1), true));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testHashcode(DoublePolynomial doublePolynomial1, DoublePolynomial doublePolynomial2, boolean result) {
+		assertEquals(result, doublePolynomial1.hashCode() == doublePolynomial2.hashCode());
+	}
+	
+	static Stream<Arguments> testHashcode() {
+		return Stream.of(
+				Arguments.of(new DoublePolynomial(1, 2, 3), new DoublePolynomial(1, 2, 3), true),
+				Arguments.of(new DoublePolynomial(1, 2, 3), new DoublePolynomial(0, 1, 2, 3), false),
+				Arguments.of(new DoublePolynomial(1, -0.0, 1), new DoublePolynomial(1, 0.0, 1), true));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testToString(DoublePolynomial doublePolynomial, String result) {
+		assertEquals(result, doublePolynomial.toString());
+	}
+	
+	static Stream<Arguments> testToString() {
+		return Stream.of(
+				Arguments.of(valueOf("0"), "0.0"),
+				Arguments.of(valueOf("0.5"), "0.5"),
+				Arguments.of(valueOf("-1"), "-1.0"),
+				Arguments.of(valueOf("x"), "x"),
+				Arguments.of(valueOf("x+1"), "x + 1.0"),
+				Arguments.of(valueOf("-2+x"), "x - 2.0"),
+				Arguments.of(valueOf("3-x"), "-x + 3.0"),
+				Arguments.of(valueOf("-x-4"), "-x - 4.0"),
+				Arguments.of(valueOf("-1+x+2x^2"), "2.0 x² + x - 1.0"),
+				Arguments.of(valueOf("-5 x^4 - 4 x³ + 3 x² - x + 1"), "-5.0 x^4 - 4.0 x³ + 3.0 x² - x + 1.0"));
 	}
 }
