@@ -4,7 +4,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jamato.algebra.Exponentation;
+import jamato.algebra.Exponentiation;
 import jamato.algebra.Ring;
 
 /**
@@ -147,7 +147,7 @@ public class DoubleComplex implements Ring<DoubleComplex> {
 	
 	@Override
 	public DoubleComplex pow(int exponent) {
-		return Exponentation.pow(this, exponent, ONE);
+		return Exponentiation.pow(this, exponent, ONE);
 	}
 	
 	/**
@@ -179,7 +179,7 @@ public class DoubleComplex implements Ring<DoubleComplex> {
 	
 	/**
 	 * Returns {@code true} if this is finite, {@code false} otherwise. A complex
-	 * number is finite if neither component is {@code NaN} oder {@code infinite}.
+	 * number is finite if neither component is {@code NaN} or {@code infinite}.
 	 * 
 	 * @return <code>true</code> if this is finite
 	 */
@@ -235,7 +235,7 @@ public class DoubleComplex implements Ring<DoubleComplex> {
 			.compile(REAL_PATTERN_STRING + "|" + IMAGINARY_PATTERN_STRING + "|" + COMPLEX_PATTERN_STRING);
 	
 	/**
-	 * Creates a complex number from a string such as {@code 3x+i} or {@code -42i}.
+	 * Creates a complex number from a string such as {@code 3+i} or {@code -42i}.
 	 * 
 	 * @param s a string
 	 * @return a complex number

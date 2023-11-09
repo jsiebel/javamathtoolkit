@@ -8,7 +8,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.DoubleStream;
 
-import jamato.algebra.Exponentation;
+import jamato.algebra.Exponentiation;
 import jamato.algebra.Ring;
 
 /**
@@ -193,15 +193,16 @@ public class DoublePolynomial implements Ring<DoublePolynomial>, DoubleUnaryOper
 
 	/**
 	 * Returns a DoublePolynomial with the value <code>(this<sup>exponent</sup>)</code>.
-	 * @param exponent the exponent of the exponentation, must be positive or zero
+	 * 
+	 * @param exponent the exponent of the exponentiation, must be positive or zero
 	 * @return <code>this<sup>exponent</sup></code>
 	 * @throws ArithmeticException if the exponent is negative
 	 */
 	@Override
 	public DoublePolynomial pow(int exponent) {
 		if (exponent >= 0) {
-			return Exponentation.pow(this, exponent, ONE);
-		}else {
+			return Exponentiation.pow(this, exponent, ONE);
+		} else {
 			throw new ArithmeticException();
 		}
 	}

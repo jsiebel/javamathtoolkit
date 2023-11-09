@@ -1,7 +1,7 @@
 package jamato.algebra;
 
-import static jamato.algebra.Exponentation.pow;
-import static jamato.algebra.Exponentation.powMod;
+import static jamato.algebra.Exponentiation.pow;
+import static jamato.algebra.Exponentiation.powMod;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
@@ -13,7 +13,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import jamato.number.IntRational;
 
-class ExponentationTest {
+class ExponentiationTest {
 	
 	@ParameterizedTest
 	@MethodSource

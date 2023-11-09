@@ -1,19 +1,19 @@
 package jamato.algebra;
 
 /**
- * This class provides methods that calculate exponentation.
+ * This class provides methods that calculate exponentiation.
  * @author JSiebel
  *
  */
-public class Exponentation {
+public class Exponentiation {
 	
-	protected Exponentation() {
+	protected Exponentiation() {
 	}
 
 	/**
 	 * Returns <code>(base<sup>exponent</sup>)</code>.
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @return <code>base<sup>exponent</sup></code>
 	 */
 	public static int pow(int base, int exponent) {
@@ -33,8 +33,8 @@ public class Exponentation {
 	
 	/**
 	 * Returns <code>(base<sup>exponent</sup>)</code>.
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @return <code>base<sup>exponent</sup></code>
 	 */
 	public static long pow(long base, long exponent) {
@@ -53,8 +53,8 @@ public class Exponentation {
 	
 	/**
 	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @param modulus the modulus
 	 * @return <code>base<sup>exponent</sup> % modulus</code>
 	 */
@@ -80,8 +80,8 @@ public class Exponentation {
 	
 	/**
 	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @param modulus the modulus
 	 * @return <code>base<sup>exponent</sup> % modulus</code>
 	 */
@@ -104,12 +104,12 @@ public class Exponentation {
 	}
 	
 	/**
-	 * Returns the value <code>(base<sup>exponent</sup>)</code>. Exponentation with
+	 * Returns the value <code>(base<sup>exponent</sup>)</code>. Exponentiation with
 	 * negative or zero exponents depend on the base being invertible.
 	 * 
 	 * @param <T>      the class of the base and the result
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @return <code>base<sup>exponent</sup></code>
 	 * @throws UnsupportedOperationException if the exponent is negative or zero,
 	 *                                       and the ring {@code T} has no
@@ -128,12 +128,12 @@ public class Exponentation {
 	}
 	
 	/**
-	 * Returns the value <code>(base<sup>exponent</sup>)</code>. Exponentation with
+	 * Returns the value <code>(base<sup>exponent</sup>)</code>. Exponentiation with
 	 * negative exponents depend on the base being invertible.
 	 * 
 	 * @param <T>      the class of the base and the result
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation
 	 * @param one      the neutral element of the multiplication in the ring
 	 * @return <code>base<sup>exponent</sup></code>
 	 * @throws UnsupportedOperationException if the exponent is negative and the
@@ -157,8 +157,8 @@ public class Exponentation {
 	 * exponent is ignored.
 	 * 
 	 * @param <T>      the class of the base and the result
-	 * @param base     the base of the exponentation
-	 * @param exponent the exponent of the exponentation, must not be zero
+	 * @param base     the base of the exponentiation
+	 * @param exponent the exponent of the exponentiation, must not be zero
 	 * @return <code>base<sup>exponent</sup></code>
 	 */
 	private static <T extends Ring<T>> T powAbsolute(T base, int exponent){

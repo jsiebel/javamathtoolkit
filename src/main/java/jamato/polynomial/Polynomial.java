@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import jamato.algebra.Exponentation;
+import jamato.algebra.Exponentiation;
 import jamato.algebra.Ring;
 
 /**
@@ -88,7 +88,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 
 	@Override
 	public Polynomial<T> negate() {
-		return new Polynomial<T>(degree, coefficients.stream().map(T::negate));
+		return new Polynomial<>(degree, coefficients.stream().map(T::negate));
 	}
 
 	@Override
@@ -109,7 +109,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 		for (; d <= summand.degree; d++) {
 			coefficients.add(summand.coefficients.get(d));
 		}
-		return new Polynomial<T>(coefficients);
+		return new Polynomial<>(coefficients);
 	}
 
 	@Override
@@ -125,7 +125,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 		for (; d <= subtrahend.degree; d++) {
 			coefficients.add(subtrahend.coefficients.get(d).negate());
 		}
-		return new Polynomial<T>(coefficients);
+		return new Polynomial<>(coefficients);
 	}
 	
 	@Override
@@ -146,7 +146,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 			}
 			coefficients.add(r);
 		}
-		return new Polynomial<T>(coefficients);
+		return new Polynomial<>(coefficients);
 	}
 	
 	/**
@@ -156,7 +156,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 	 * @return {@code (this * factor)}
 	 */
 	public Polynomial<T> multiply(T factor) {
-		return new Polynomial<T>(coefficients.stream().map(c -> c.multiply(factor)));
+		return new Polynomial<>(coefficients.stream().map(c -> c.multiply(factor)));
 	}
 
 	/**
@@ -189,7 +189,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 					remainder.set(d+e, remainder.get(d+e).subtract(divisor.coefficients.get(e).multiply(nextCoefficient)));
 				}
 			}
-			return new Polynomial<T>(degree, coefficients);
+			return new Polynomial<>(degree, coefficients);
 		}
 	}
 
@@ -203,24 +203,24 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 	 *                                       be {@link Ring#divide divide}d.
 	 */
 	public Polynomial<T> divide(T divisor) {
-		return new Polynomial<T>(coefficients.stream().map(c -> c.divide(divisor)));
+		return new Polynomial<>(coefficients.stream().map(c -> c.divide(divisor)));
 	}
 	
 	@Override
 	public Polynomial<T> divide(long divisor) {
-		return new Polynomial<T>(coefficients.stream().map(c -> c.divide(divisor)));
+		return new Polynomial<>(coefficients.stream().map(c -> c.divide(divisor)));
 	}
 
 	/**
 	 * Returns the polynomial <code>(this<sup>exponent</sup>)</code>.
-	 * @param exponent the exponent of the exponentation, must be positive or zero
+	 * @param exponent the exponent of the exponentiation, must be positive or zero
 	 * @return <code>this<sup>exponent</sup></code>
 	 * @throws ArithmeticException if the exponent is negative
 	 */
 	@Override
 	public Polynomial<T> pow(int exponent) {
 		if (exponent > 0) {
-			return Exponentation.pow(this, exponent);
+			return Exponentiation.pow(this, exponent);
 		}else if (exponent == 0) {
 			return isZero() ? this : getOnePolynomial();
 		}else {
@@ -256,7 +256,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 					resultCoefficients.add(coefficients.get(d).multiply(substituentPow.coefficients.get(e)));
 				}
 			}
-			return new Polynomial<T>(resultCoefficients);
+			return new Polynomial<>(resultCoefficients);
 		}
 	}
 	
@@ -274,7 +274,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 			for (int d = 1; d <= degree; d++) {
 				coefficients.add(this.coefficients.get(d).multiply(d));
 			}
-			return new Polynomial<T>(coefficients);
+			return new Polynomial<>(coefficients);
 		}
 	}
 
@@ -449,7 +449,7 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 				throw new IllegalArgumentException("Invalid term: " + term);
 			}
 		}
-		return new Polynomial<T>(coefficients);
+		return new Polynomial<>(coefficients);
 	}
 
 	/**
@@ -497,14 +497,14 @@ public class Polynomial<T extends Ring<T>> implements Ring<Polynomial<T>>, Unary
 
 	/**
 	 * Returns the constant zero polynomial.
-	 * @return the constant zero polynomial 
+	 * @return the constant zero polynomial
 	 */
 	protected Polynomial<T> getZero() {
-		return new Polynomial<T>(0, Collections.singletonList(getZeroCoefficient()));
+		return new Polynomial<>(0, Collections.singletonList(getZeroCoefficient()));
 	}
 
 	/**
-	 * Returns the constant one polynomial. 
+	 * Returns the constant one polynomial.
 	 * @return the constant one polynomial
 	 * @throws UnsupportedOperationException if this is zero
 	 */

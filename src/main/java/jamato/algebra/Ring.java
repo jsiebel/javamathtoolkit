@@ -158,14 +158,11 @@ public interface Ring<SELF extends Ring<SELF>> {
 	/**
 	 * Returns the value <code>(this<sup>exponent</sup>)</code>.
 	 * 
-	 * @param exponent the exponent of the exponentation, must be positive if T has
-	 *                 no multiplicative inverse
+	 * @param exponent the exponent of the exponentiation, must be positive if T has no multiplicative inverse
 	 * @return <code>this<sup>exponent</sup></code>
-	 * @throws UnsupportedOperationException if the exponent is negative or zero,
-	 *                                       and this ring has no multiplicative
-	 *                                       inverse
-	 * @throws ArithmeticException           if the exponent is negative or zero and
-	 *                                       the {@code this} is zero
+	 * @throws UnsupportedOperationException if the exponent is negative or zero, and this ring has no multiplicative
+	 * inverse
+	 * @throws ArithmeticException if the exponent is negative or zero and the {@code this} is zero
 	 */
 	public default SELF pow(int exponent) {
 		/*
@@ -173,6 +170,6 @@ public interface Ring<SELF extends Ring<SELF>> {
 		 */
 		@SuppressWarnings("unchecked")
 		SELF base = (SELF) this;
-		return Exponentation.pow(base, exponent);
+		return Exponentiation.pow(base, exponent);
 	}
 }
