@@ -8,8 +8,8 @@ import jamato.algebra.GCD;
 import jamato.algebra.Ring;
 
 /**
- * An immutable arbitrary-precision rational number. The nominator and
- * denominator are reduced, the nominator is never negative.
+ * An immutable arbitrary-precision rational number. The numerator and
+ * denominator are reduced, the numerator is never negative.
  * <p>
  * Operations on the special values {@link #POSITIVE_INFINITY},
  * {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like their equivalents in
@@ -35,68 +35,67 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	/** The BigRational constant negative infinity */
 	public static final BigRational NEGATIVE_INFINITY = new BigRational(BigInteger.ONE.negate(), BigInteger.ZERO);
 	
-	/** The nominator of this BigRational. */
-	public final BigInteger nominator;
+	/** The numerator of this BigRational. */
+	public final BigInteger numerator;
 
 	/** The denominator of this BigRational. The denominator is never negative. */
 	public final BigInteger denominator;
 	
 	/**
-	 * Creates a BigRational with the value equal to {@code nominator/denominator}.
-	 * If the denominator is {@code 0}, the result is {@link #POSITIVE_INFINITY}
-	 * (for positive nominators), {@link #NEGATIVE_INFINITY} (for negative
-	 * nominators), or {@link #NAN} (if the nominator is {@code 0}).
+	 * Creates a BigRational with the value equal to {@code numerator/denominator}. If the denominator is {@code 0}, the
+	 * result is {@link #POSITIVE_INFINITY} (for positive numerators), {@link #NEGATIVE_INFINITY} (for negative
+	 * numerators), or {@link #NAN} (if the numerator is {@code 0}).
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 * @param denominator the denominator
 	 */
-	public BigRational(BigInteger nominator, BigInteger denominator) {
-		this(nominator, denominator, GCD.of(nominator, denominator));
+	public BigRational(BigInteger numerator, BigInteger denominator) {
+		this(numerator, denominator, GCD.of(numerator, denominator));
 	}
 	
 	/**
-	 * Creates a BigRational with the value equal to {@code nominator/1}.
+	 * Creates a BigRational with the value equal to {@code numerator/1}.
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 */
-	public BigRational(BigInteger nominator) {
-		this(nominator, BigInteger.ONE);
+	public BigRational(BigInteger numerator) {
+		this(numerator, BigInteger.ONE);
 	}
 
 	
 	/**
-	 * Creates a BigRational with the value equal to {@code nominator/denominator}.
-	 * If the denominator is {@code 0}, the result is {@link #POSITIVE_INFINITY}
-	 * (for positive nominators), {@link #NEGATIVE_INFINITY} (for negative
-	 * nominators), or {@link #NAN} (if the nominator is {@code 0}).
+	 * Creates a BigRational with the value equal to {@code numerator/denominator}. If the denominator is {@code 0}, the
+	 * result is {@link #POSITIVE_INFINITY} (for positive numerators), {@link #NEGATIVE_INFINITY} (for negative
+	 * numerators), or {@link #NAN} (if the numerator is {@code 0}).
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 * @param denominator the denominator
 	 */
-	public BigRational(long nominator, long denominator) {
-		this(BigInteger.valueOf(nominator), BigInteger.valueOf(denominator), BigInteger.valueOf(GCD.of(nominator, denominator)));
+	public BigRational(long numerator, long denominator) {
+		this(BigInteger.valueOf(numerator), BigInteger.valueOf(denominator),
+				BigInteger.valueOf(GCD.of(numerator, denominator)));
 	}
 	
 	/**
-	 * Creates a BigRational with the value equal to {@code nominator/1}.
+	 * Creates a BigRational with the value equal to {@code numerator/1}.
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 */
-	public BigRational(long nominator) {
-		this(BigInteger.valueOf(nominator), BigInteger.ONE, BigInteger.ONE);
+	public BigRational(long numerator) {
+		this(BigInteger.valueOf(numerator), BigInteger.ONE, BigInteger.ONE);
 	}
 	
-	private BigRational(BigInteger nominator, BigInteger denominator, BigInteger gcd) {
-		Objects.requireNonNull(nominator);
+	private BigRational(BigInteger numerator, BigInteger denominator, BigInteger gcd) {
+		Objects.requireNonNull(numerator);
 		Objects.requireNonNull(denominator);
 		if (gcd.equals(BigInteger.ZERO)) {
-			this.nominator = BigInteger.ZERO;
+			this.numerator = BigInteger.ZERO;
 			this.denominator = BigInteger.ZERO;
-		} else if (denominator.signum() < 0){
-			this.nominator = nominator.negate().divide(gcd);
+		} else if (denominator.signum() < 0) {
+			this.numerator = numerator.negate().divide(gcd);
 			this.denominator = denominator.negate().divide(gcd);
-		}else {
-			this.nominator = nominator.divide(gcd);
+		} else {
+			this.numerator = numerator.divide(gcd);
 			this.denominator = denominator.divide(gcd);
 		}
 	}
@@ -109,19 +108,18 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	private static final long MANTISSA_MASK = 0x000fffffffffffffL;
 	
 	/**
-	 * Creates a BigRational with the given double value. This constructor tries to
-	 * find the smallest nominator and denominator where
-	 * {@code this.doubleValue() == value}.
+	 * Creates a BigRational with the given double value. This constructor tries to find the smallest numerator and
+	 * denominator where {@code this.doubleValue() == value}.
 	 * 
 	 * @param value a double value
 	 */
 	public BigRational(double value) {
 		long mantissa = Double.doubleToRawLongBits(value) & MANTISSA_MASK;
 		if (!Double.isFinite(value)) {
-			nominator = BigInteger.valueOf((long) Math.signum(value));
+			numerator = BigInteger.valueOf((long) Math.signum(value));
 			denominator = BigInteger.ZERO;
 		}else if (value == 0) {
-			nominator = BigInteger.ZERO;
+			numerator = BigInteger.ZERO;
 			denominator = BigInteger.ONE;
 		} else {
 			/*
@@ -199,29 +197,28 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			
 			int commonTrailingZeros = Math.min(
 					Long.numberOfTrailingZeros(bestB) + Math.max(exponent, 0),
-					Long.numberOfTrailingZeros(bestD) + Math.max(-exponent, 0)
-					);
-			int nominatorShift = Math.max(exponent, 0) - commonTrailingZeros;
+					Long.numberOfTrailingZeros(bestD) + Math.max(-exponent, 0));
+			int numeratorShift = Math.max(exponent, 0) - commonTrailingZeros;
 			int denominatorShift = Math.max(-exponent, 0) - commonTrailingZeros;
-			nominator = BigInteger.valueOf(bestB).shiftLeft(nominatorShift);
+			numerator = BigInteger.valueOf(bestB).shiftLeft(numeratorShift);
 			denominator = BigInteger.valueOf(bestD).shiftLeft(denominatorShift);
 		}
 	}
 	
-	private static double divideAsDouble(BigInteger nominator, BigInteger denominator) {
-		if (nominator.bitLength() <= DOUBLE_MANTISSA_BITS && denominator.bitLength() <= DOUBLE_MANTISSA_BITS) {
-			return nominator.doubleValue() / denominator.doubleValue();
-		}else {
-			int signum = nominator.signum();
-			nominator = nominator.abs();
+	private static double divideAsDouble(BigInteger numerator, BigInteger denominator) {
+		if (numerator.bitLength() <= DOUBLE_MANTISSA_BITS && denominator.bitLength() <= DOUBLE_MANTISSA_BITS) {
+			return numerator.doubleValue() / denominator.doubleValue();
+		} else {
+			int signum = numerator.signum();
+			numerator = numerator.abs();
 			
-			int lengthDifference = nominator.bitLength() - denominator.bitLength();
+			int lengthDifference = numerator.bitLength() - denominator.bitLength();
 			int doubleMantissaBits = DOUBLE_MANTISSA_BITS;
 			int exponent = doubleMantissaBits - lengthDifference;
-			if (nominator.shiftRight(lengthDifference).compareTo(denominator) < 0) {
+			if (numerator.shiftRight(lengthDifference).compareTo(denominator) < 0) {
 				exponent++;
 			}
-			BigInteger mantissa = nominator
+			BigInteger mantissa = numerator
 					.shiftLeft(exponent)
 					.add(denominator.shiftRight(1))
 					.divide(denominator);
@@ -231,12 +228,12 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 
 	@Override
 	public BigRational negate() {
-		return new BigRational(nominator.negate(), denominator, BigInteger.ONE);
+		return new BigRational(numerator.negate(), denominator, BigInteger.ONE);
 	}
-
+	
 	@Override
 	public boolean isZero() {
-		return nominator.equals(BigInteger.ZERO) && ! denominator.equals(BigInteger.ZERO);
+		return numerator.equals(BigInteger.ZERO) && !denominator.equals(BigInteger.ZERO);
 	}
 	
 	@Override
@@ -244,15 +241,16 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		if (isFinite() && summand.isFinite()) {
 			BigInteger gcd = GCD.of(denominator, summand.denominator);
 			return new BigRational(
-					nominator.multiply(summand.denominator.divide(gcd)).add(summand.nominator.multiply(denominator.divide(gcd))),
+					numerator.multiply(summand.denominator.divide(gcd))
+							.add(summand.numerator.multiply(denominator.divide(gcd))),
 					denominator.divide(gcd).multiply(summand.denominator));
-		}else if (isFinite()){
+		} else if (isFinite()) {
 			return summand;
-		}else if (summand.isFinite()) {
+		} else if (summand.isFinite()) {
 			return this;
-		}else if (nominator == summand.nominator){
+		} else if (numerator == summand.numerator) {
 			return this;
-		}else {
+		} else {
 			return NAN;
 		}
 	}
@@ -264,8 +262,8 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 */
 	public BigRational add(BigInteger summand) {
 		if (isFinite()) {
-			return new BigRational(nominator.add(denominator.multiply(summand)), denominator, BigInteger.ONE);
-		}else {
+			return new BigRational(numerator.add(denominator.multiply(summand)), denominator, BigInteger.ONE);
+		} else {
 			return this;
 		}
 	}
@@ -285,14 +283,14 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		if (isFinite() && subtrahend.isFinite()) {
 			BigInteger gcd = GCD.of(denominator, subtrahend.denominator);
 			return new BigRational(
-					nominator.multiply(subtrahend.denominator.divide(gcd))
-							.subtract(subtrahend.nominator.multiply(denominator.divide(gcd))),
+					numerator.multiply(subtrahend.denominator.divide(gcd))
+							.subtract(subtrahend.numerator.multiply(denominator.divide(gcd))),
 					denominator.divide(gcd).multiply(subtrahend.denominator));
 		} else if (isFinite()) {
 			return subtrahend.negate();
 		} else if (subtrahend.isFinite()) {
 			return this;
-		} else if (nominator.equals(subtrahend.nominator.negate())) {
+		} else if (numerator.equals(subtrahend.numerator.negate())) {
 			return this;
 		} else {
 			return NAN;
@@ -307,7 +305,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 */
 	public BigRational subtract(BigInteger subtrahend) {
 		if (isFinite()) {
-			return new BigRational(nominator.subtract(denominator.multiply(subtrahend)), denominator, BigInteger.ONE);
+			return new BigRational(numerator.subtract(denominator.multiply(subtrahend)), denominator, BigInteger.ONE);
 		} else {
 			return this;
 		}
@@ -330,20 +328,20 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	
 	@Override
 	public BigRational invert() {
-		return new BigRational(denominator, nominator, BigInteger.ONE);
+		return new BigRational(denominator, numerator, BigInteger.ONE);
 	}
 	
 	@Override
 	public BigRational multiply(BigRational factor) {
 		if (!isFinite() || !factor.isFinite()) {
-			return getNonFiniteValueBySign(nominator.signum() * factor.signum());
+			return getNonFiniteValueBySign(numerator.signum() * factor.signum());
 		} else if (isZero() || factor.isZero()) {
 			return ZERO;
 		} else {
-			BigInteger gcd1 = GCD.of(nominator, factor.denominator);
-			BigInteger gcd2 = GCD.of(factor.nominator, denominator);
+			BigInteger gcd1 = GCD.of(numerator, factor.denominator);
+			BigInteger gcd2 = GCD.of(factor.numerator, denominator);
 			return new BigRational(
-					nominator.divide(gcd1).multiply(factor.nominator.divide(gcd2)),
+					numerator.divide(gcd1).multiply(factor.numerator.divide(gcd2)),
 					denominator.divide(gcd2).multiply(factor.denominator.divide(gcd1)),
 					BigInteger.ONE);
 		}
@@ -357,12 +355,12 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 */
 	public BigRational multiply(BigInteger factor) {
 		if (!isFinite()) {
-			return getNonFiniteValueBySign(nominator.signum() * factor.signum());
+			return getNonFiniteValueBySign(numerator.signum() * factor.signum());
 		} else if (isZero() || factor.signum() == 0) {
 			return ZERO;
 		} else {
 			BigInteger gcd = GCD.of(denominator, factor);
-			return new BigRational(nominator.multiply(factor.divide(gcd)), denominator.divide(gcd), BigInteger.ONE);
+			return new BigRational(numerator.multiply(factor.divide(gcd)), denominator.divide(gcd), BigInteger.ONE);
 		}
 	}
 	
@@ -380,18 +378,18 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	@Override
 	public BigRational divide(BigRational divisor) {
 		if (divisor.isZero()) {
-			return getNonFiniteValueBySign(nominator.signum());
+			return getNonFiniteValueBySign(numerator.signum());
 		} else if (!isFinite() || divisor.isNaN()) {
 			int invertedDivisorSignum = divisor.isFinite() ? divisor.signum() : 0;
-			return getNonFiniteValueBySign(nominator.signum() * invertedDivisorSignum);
+			return getNonFiniteValueBySign(numerator.signum() * invertedDivisorSignum);
 		} else if (isZero() || !divisor.isFinite()) {
 			return ZERO;
 		} else {
-			BigInteger gcd1 = GCD.of(nominator, divisor.nominator);
+			BigInteger gcd1 = GCD.of(numerator, divisor.numerator);
 			BigInteger gcd2 = GCD.of(divisor.denominator, denominator);
 			return new BigRational(
-					nominator.divide(gcd1).multiply(divisor.denominator.divide(gcd2)),
-					denominator.divide(gcd2).multiply(divisor.nominator.divide(gcd1)),
+					numerator.divide(gcd1).multiply(divisor.denominator.divide(gcd2)),
+					denominator.divide(gcd2).multiply(divisor.numerator.divide(gcd1)),
 					BigInteger.ONE);
 		}
 	}
@@ -404,14 +402,14 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 */
 	public BigRational divide(BigInteger divisor) {
 		if (divisor.signum() == 0) {
-			return getNonFiniteValueBySign(nominator.signum());
+			return getNonFiniteValueBySign(numerator.signum());
 		} else if (!isFinite()) {
-			return getNonFiniteValueBySign(nominator.signum() * divisor.signum());
+			return getNonFiniteValueBySign(numerator.signum() * divisor.signum());
 		} else if (isZero()) {
 			return ZERO;
 		} else {
-			BigInteger gcd = GCD.of(nominator, divisor);
-			return new BigRational(nominator.divide(gcd), denominator.multiply(divisor.divide(gcd)), BigInteger.ONE);
+			BigInteger gcd = GCD.of(numerator, divisor);
+			return new BigRational(numerator.divide(gcd), denominator.multiply(divisor.divide(gcd)), BigInteger.ONE);
 		}
 	}
 	
@@ -429,30 +427,30 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	@Override
 	public BigRational pow(int exponent) {
 		if (exponent < 0) {
-			return new BigRational(denominator.pow(-exponent), nominator.pow(-exponent), BigInteger.ONE);
+			return new BigRational(denominator.pow(-exponent), numerator.pow(-exponent), BigInteger.ONE);
 		} else {
-			return new BigRational(nominator.pow(exponent), denominator.pow(exponent), BigInteger.ONE);
+			return new BigRational(numerator.pow(exponent), denominator.pow(exponent), BigInteger.ONE);
 		}
 	}
 	
-    /**
-     * Returns the signum function of this.
-     *
-     * @return -1, 0 or 1 as the value of this BigRational is negative, zero/NaN or
-     *         positive.
-     */
+	/**
+	 * Returns the signum function of this.
+	 *
+	 * @return -1, 0 or 1 as the value of this BigRational is negative, zero/NaN or positive.
+	 */
 	public int signum() {
-		return nominator.signum();
+		return numerator.signum();
 	}
 
 	/**
 	 * Returns the absolute value of this.
+	 * 
 	 * @return {@code (|this|)}
 	 */
 	public BigRational absolute() {
-		if (nominator.signum() < 0) {
+		if (numerator.signum() < 0) {
 			return negate();
-		}else {
+		} else {
 			return this;
 		}
 	}
@@ -523,13 +521,13 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 */
 	public BigInteger round(RoundingMode roundingMode) {
 		if (isInteger()) {
-			return nominator;
+			return numerator;
 		} else if (isNaN()) {
 			return BigInteger.ZERO;
 		} else if (!isFinite()) {
 			throw new ArithmeticException();
 		}
-		BigInteger[] divideAndRemainder = nominator.divideAndRemainder(denominator);
+		BigInteger[] divideAndRemainder = numerator.divideAndRemainder(denominator);
 		int halfIndicator = divideAndRemainder[1].abs().shiftLeft(1).compareTo(denominator);
 		BigInteger quotient = divideAndRemainder[0];
 		
@@ -542,10 +540,10 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			awayFromZero = false;
 			break;
 		case CEILING:
-			awayFromZero = nominator.signum() > 0;
+			awayFromZero = numerator.signum() > 0;
 			break;
 		case FLOOR:
-			awayFromZero = nominator.signum() < 0;
+			awayFromZero = numerator.signum() < 0;
 			break;
 		case HALF_UP:
 			awayFromZero = halfIndicator >= 0;
@@ -561,7 +559,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			throw new ArithmeticException();
 		}
 		if (awayFromZero) {
-			quotient = quotient.add(BigInteger.valueOf(nominator.signum()));
+			quotient = quotient.add(BigInteger.valueOf(numerator.signum()));
 		}
 		return quotient;
 	}
@@ -601,7 +599,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			return true;
 		} else if (obj instanceof BigRational) {
 			BigRational intRational = (BigRational) obj;
-			return nominator.equals(intRational.nominator) && denominator.equals(intRational.denominator);
+			return numerator.equals(intRational.numerator) && denominator.equals(intRational.denominator);
 		} else {
 			return false;
 		}
@@ -609,17 +607,17 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(nominator, denominator);
+		return Objects.hash(numerator, denominator);
 	}
 	
 	@Override
 	public String toString() {
-		return denominator.equals(BigInteger.ONE) ? nominator + "" : nominator + "/" + denominator;
+		return denominator.equals(BigInteger.ONE) ? numerator + "" : numerator + "/" + denominator;
 	}
 	
 	@Override
 	public double doubleValue() {
-		return divideAsDouble(nominator, denominator);
+		return divideAsDouble(numerator, denominator);
 	}
 	
 	@Override
@@ -644,7 +642,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
      *          to type {@code BigInteger}
      */
 	public BigInteger bigIntegerValue() {
-		return nominator.divide(denominator);
+		return numerator.divide(denominator);
 	}
 
 	@Override
@@ -652,15 +650,15 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		if (this.equals(o)) {
 			return 0;
 		} else if (isFinite() && o.isFinite()) {
-			return nominator.multiply(o.denominator).compareTo(o.nominator.multiply(denominator));
+			return numerator.multiply(o.denominator).compareTo(o.numerator.multiply(denominator));
 		} else if (isNaN()) {
 			return 1;
 		} else if (o.isNaN()) {
 			return -1;
 		} else if (isFinite()) {
-			return -o.nominator.signum();
+			return -o.numerator.signum();
 		} else {
-			return nominator.signum();
+			return numerator.signum();
 		}
 	}
 	

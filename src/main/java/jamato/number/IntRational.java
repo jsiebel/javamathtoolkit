@@ -8,14 +8,12 @@ import jamato.algebra.GCD;
 import jamato.algebra.Ring;
 
 /**
- * An immutable rational number with integer nominator and denominator. The
- * nominator and denominator are reduced, the nominator is never negative. In
- * case of an overflow of the nominator or denominator in the result of an
- * operation, the result is approximated.
+ * An immutable rational number with integer numerator and denominator. The numerator and denominator are reduced, the
+ * numerator is never negative. In case of an overflow of the numerator or denominator in the result of an operation,
+ * the result is approximated.
  * <p>
- * Operations on the special values {@link #POSITIVE_INFINITY},
- * {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like their equivalents in
- * the {@link Double} class.
+ * Operations on the special values {@link #POSITIVE_INFINITY}, {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like
+ * their equivalents in the {@link Double} class.
  * 
  * @author JSiebel
  *
@@ -26,97 +24,98 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 
 	/** The IntRational constant 0 */
 	public static final IntRational ZERO = new IntRational(0, 1);
+	
 	/** The IntRational constant 1 */
 	public static final IntRational ONE = new IntRational(1, 1);
+	
 	/** The IntRational constant NAN */
 	public static final IntRational NAN = new IntRational(0, 0);
+	
 	/** The IntRational constant positive infinity */
 	public static final IntRational POSITIVE_INFINITY = new IntRational(1, 0);
+	
 	/** The IntRational constant negative infinity */
 	public static final IntRational NEGATIVE_INFINITY = new IntRational(-1, 0);
 
-	/** The nominator of this IntRational. */
-	public final int nominator;
+	/** The numerator of this IntRational. */
+	public final int numerator;
 
 	/** The denominator of this IntRational. */
 	public final int denominator;
 
 	/**
-	 * Creates an IntRational with the value equal to {@code nominator/denominator}.
-	 * If the denominator is {@code 0}, the result is {@link #POSITIVE_INFINITY}
-	 * (for positive nominators), {@link #NEGATIVE_INFINITY} (for negative
-	 * nominators), or {@link #NAN} (if the nominator is {@code 0}).
+	 * Creates an IntRational with the value equal to {@code numerator/denominator}. If the denominator is {@code 0},
+	 * the result is {@link #POSITIVE_INFINITY} (for positive numerators), {@link #NEGATIVE_INFINITY} (for negative
+	 * numerators), or {@link #NAN} (if the numerator is {@code 0}).
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 * @param denominator the denominator
 	 */
-	public IntRational(int nominator, int denominator) {
-		this(nominator, denominator, GCD.of(nominator, denominator));
-	}
-
-	/**
-	 * Creates an IntRational with the value equal to {@code nominator/1}.
-	 * 
-	 * @param nominator   the nominator
-	 */
-	public IntRational(int nominator) {
-		this(nominator, 1);
+	public IntRational(int numerator, int denominator) {
+		this(numerator, denominator, GCD.of(numerator, denominator));
 	}
 	
-	protected IntRational(int nominator, int denominator, int gcd) {
+	/**
+	 * Creates an IntRational with the value equal to {@code numerator/1}.
+	 * 
+	 * @param numerator the numerator
+	 */
+	public IntRational(int numerator) {
+		this(numerator, 1);
+	}
+	
+	protected IntRational(int numerator, int denominator, int gcd) {
 		if (gcd == 0) {
-			this.nominator = 0;
+			this.numerator = 0;
 			this.denominator = 0;
-		} else if (denominator < 0){
-			this.nominator = -nominator / gcd;
+		} else if (denominator < 0) {
+			this.numerator = -numerator / gcd;
 			this.denominator = -denominator / gcd;
-		}else {
-			this.nominator = nominator / gcd;
+		} else {
+			this.numerator = numerator / gcd;
 			this.denominator = denominator / gcd;
 		}
 	}
 	
 	/**
-	 * Creates an IntRational from a long nominator and denominator. If either is
-	 * not in integer range, the result is approximated. The nomiator and the
-	 * denominator must be coprime.
+	 * Creates an IntRational from a long numerator and denominator. If either is not in integer range, the result is
+	 * approximated. The nomiator and the denominator must be coprime.
 	 * 
-	 * @param nominator   the nominator
+	 * @param numerator the numerator
 	 * @param denominator the denominator
 	 */
-	protected IntRational(long nominator, long denominator) {
+	protected IntRational(long numerator, long denominator) {
 		if (denominator == 0) {
-			this.nominator = Long.signum(nominator);
+			this.numerator = Long.signum(numerator);
 			this.denominator = 0;
-		}else if (nominator == 0) {
-			this.nominator = 0;
+		} else if (numerator == 0) {
+			this.numerator = 0;
 			this.denominator = 1;
-		}else {
-			while ((Math.abs(nominator)|Math.abs(denominator)) >> (Integer.SIZE-1) != 0) {
-				nominator /= 2;
+		} else {
+			while ((Math.abs(numerator) | Math.abs(denominator)) >> (Integer.SIZE - 1) != 0) {
+				numerator /= 2;
 				denominator /= 2;
-				long gcd = GCD.of(nominator, denominator);
-				nominator /= gcd;
+				long gcd = GCD.of(numerator, denominator);
+				numerator /= gcd;
 				denominator /= gcd;
 			}
-			this.nominator = (int) nominator;
+			this.numerator = (int) numerator;
 			this.denominator = (int) denominator;
 		}
 	}
 	
 	/**
-	 * Creates an IntRational with the given double value. This constructor tries to
-	 * find the smallest nominator and denominator where
-	 * {@code this.doubleValue() == value}.
+	 * Creates an IntRational with the given double value. This constructor tries to find the smallest numerator and
+	 * denominator where {@code this.doubleValue() == value}.
 	 * 
 	 * @param value a double value
 	 */
 	public IntRational(double value) {
 		if (!Double.isFinite(value)) {
-			nominator = (int) Math.signum(value);
+			numerator = (int) Math.signum(value);
 			denominator = 0;
-		}else if (value < Integer.MIN_VALUE / 2 || value > Integer.MAX_VALUE / 2 + 1) {
-			nominator = (int) value;
+		} else if (value < Integer.MIN_VALUE / 2 || value > Integer.MAX_VALUE / 2 + 1) {
+			numerator = (int) value;
 			denominator = 1;
 		} else {
 			/*
@@ -168,11 +167,11 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			}
 			if (Math.abs(value - (double) a / c) <= Math.abs(value - (double) b / d)) {
 				int signum = Integer.signum(c);
-				nominator = a * signum;
+				numerator = a * signum;
 				denominator = c * signum;
 			} else {
 				int signum = Integer.signum(d);
-				nominator = b * signum;
+				numerator = b * signum;
 				denominator = d * signum;
 			}
 		}
@@ -184,32 +183,32 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	
 	@Override
 	public IntRational negate() {
-		if (nominator == Integer.MIN_VALUE) {
+		if (numerator == Integer.MIN_VALUE) {
 			return POSITIVE_INFINITY;
 		} else {
-			return new IntRational(-nominator, denominator, 1);
+			return new IntRational(-numerator, denominator, 1);
 		}
 	}
-
+	
 	@Override
 	public boolean isZero() {
-		return nominator == 0 && denominator != 0;
+		return numerator == 0 && denominator != 0;
 	}
 	
 	@Override
 	public IntRational add(IntRational summand) {
 		if (isFinite() && summand.isFinite()) {
-			long resultNominator = (long)nominator * summand.denominator + (long)summand.nominator * denominator;
-			long resultDenominator = (long)denominator * summand.denominator;
-			long gcd = GCD.of(resultNominator, resultDenominator);
-			return new IntRational(resultNominator / gcd, resultDenominator / gcd);
-		}else if (isFinite()){
+			long resultNumerator = (long) numerator * summand.denominator + (long) summand.numerator * denominator;
+			long resultDenominator = (long) denominator * summand.denominator;
+			long gcd = GCD.of(resultNumerator, resultDenominator);
+			return new IntRational(resultNumerator / gcd, resultDenominator / gcd);
+		} else if (isFinite()) {
 			return summand;
-		}else if (summand.isFinite()) {
+		} else if (summand.isFinite()) {
 			return this;
-		}else if (nominator == summand.nominator){
+		} else if (numerator == summand.numerator) {
 			return this;
-		}else {
+		} else {
 			return NAN;
 		}
 	}
@@ -222,7 +221,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 */
 	public IntRational add(int summand) {
 		if (isFinite()) {
-			return new IntRational(nominator + (long) denominator * summand, denominator);
+			return new IntRational(numerator + (long) denominator * summand, denominator);
 		} else {
 			return this;
 		}
@@ -231,16 +230,16 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	@Override
 	public IntRational subtract(IntRational subtrahend) {
 		if (isFinite() && subtrahend.isFinite()) {
-			long resultNominator = (long) nominator * subtrahend.denominator
-					- (long) subtrahend.nominator * denominator;
+			long resultNumerator = (long) numerator * subtrahend.denominator
+					- (long) subtrahend.numerator * denominator;
 			long resultDenominator = (long) denominator * subtrahend.denominator;
-			long gcd = GCD.of(resultNominator, resultDenominator);
-			return new IntRational(resultNominator / gcd, resultDenominator / gcd);
+			long gcd = GCD.of(resultNumerator, resultDenominator);
+			return new IntRational(resultNumerator / gcd, resultDenominator / gcd);
 		} else if (isFinite()) {
 			return subtrahend.negate();
 		} else if (subtrahend.isFinite()) {
 			return this;
-		} else if (nominator == -subtrahend.nominator) {
+		} else if (numerator == -subtrahend.numerator) {
 			return this;
 		} else {
 			return NAN;
@@ -255,7 +254,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 */
 	public IntRational subtract(int subtrahend) {
 		if (isFinite()) {
-			return new IntRational(nominator - (long) denominator * subtrahend, denominator);
+			return new IntRational(numerator - (long) denominator * subtrahend, denominator);
 		} else {
 			return this;
 		}
@@ -263,7 +262,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	
 	@Override
 	public IntRational invert() {
-		return new IntRational(denominator, nominator, 1);
+		return new IntRational(denominator, numerator, 1);
 	}
 	
 	@Override
@@ -274,14 +273,14 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	@Override
 	public IntRational multiply(IntRational factor) {
 		if (!isFinite() || !factor.isFinite()) {
-			return getNonFiniteValueBySign(Integer.signum(nominator) * factor.signum());
+			return getNonFiniteValueBySign(Integer.signum(numerator) * factor.signum());
 		} else if (isZero() || factor.isZero()) {
 			return ZERO;
 		} else {
-			int gcd1 = GCD.of(nominator, factor.denominator);
-			int gcd2 = GCD.of(factor.nominator, denominator);
+			int gcd1 = GCD.of(numerator, factor.denominator);
+			int gcd2 = GCD.of(factor.numerator, denominator);
 			return new IntRational(
-					(long) nominator / gcd1 * factor.nominator / gcd2,
+					(long) numerator / gcd1 * factor.numerator / gcd2,
 					(long) denominator / gcd2 * factor.denominator / gcd1);
 		}
 	}
@@ -299,7 +298,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			return ZERO;
 		} else {
 			int gcd = GCD.of(denominator, factor);
-			return new IntRational((long) nominator * (factor / gcd), denominator / gcd);
+			return new IntRational((long) numerator * (factor / gcd), denominator / gcd);
 		}
 	}
 	
@@ -312,18 +311,18 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	@Override
 	public IntRational divide(IntRational divisor) {
 		if (divisor.isZero()) {
-			return getNonFiniteValueBySign(nominator);
+			return getNonFiniteValueBySign(numerator);
 		} else if (!isFinite() || divisor.isNaN()) {
 			int invertedDivisorSignum = divisor.isFinite() ? divisor.signum() : 0;
-			return getNonFiniteValueBySign(Integer.signum(nominator) * invertedDivisorSignum);
+			return getNonFiniteValueBySign(Integer.signum(numerator) * invertedDivisorSignum);
 		} else if (isZero() || !divisor.isFinite()) {
 			return ZERO;
 		} else {
-			int gcd1 = GCD.of(nominator, divisor.nominator);
+			int gcd1 = GCD.of(numerator, divisor.numerator);
 			int gcd2 = GCD.of(divisor.denominator, denominator);
 			return new IntRational(
-					(long) nominator / gcd1 * divisor.denominator / gcd2,
-					(long) denominator / gcd2 * divisor.nominator / gcd1);
+					(long) numerator / gcd1 * divisor.denominator / gcd2,
+					(long) denominator / gcd2 * divisor.numerator / gcd1);
 		}
 	}
 	
@@ -336,10 +335,10 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	@Override
 	public IntRational divide(long divisor) {
 		if (isFinite()) {
-			long gcd = GCD.of(nominator, divisor);
-			return new IntRational(nominator / gcd, denominator * (divisor / gcd));
+			long gcd = GCD.of(numerator, divisor);
+			return new IntRational(numerator / gcd, denominator * (divisor / gcd));
 		} else {
-			return getNonFiniteValueBySign(Integer.signum(nominator) * Long.signum(divisor));
+			return getNonFiniteValueBySign(Integer.signum(numerator) * Long.signum(divisor));
 		}
 	}
 	
@@ -349,7 +348,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 * @return -1, 0 or 1 as the value of this is negative, zero/NaN or positive.
 	 */
 	public int signum() {
-		return Integer.signum(nominator);
+		return Integer.signum(numerator);
 	}
 	
 	/**
@@ -358,7 +357,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 * @return {@code (|this|)}
 	 */
 	public IntRational absolute() {
-		if (nominator < 0) {
+		if (numerator < 0) {
 			return negate();
 		} else {
 			return this;
@@ -430,7 +429,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	 */
 	public int round(RoundingMode roundingMode) {
 		if (isInteger()) {
-			return nominator;
+			return numerator;
 		} else if (isNaN()) {
 			return 0;
 		} else if (equals(POSITIVE_INFINITY)) {
@@ -438,9 +437,9 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 		} else if (equals(NEGATIVE_INFINITY)) {
 			return Integer.MIN_VALUE;
 		}
-		int remainder = nominator % denominator;
+		int remainder = numerator % denominator;
 		int halfIndicator = Integer.compare(2 * Math.abs(remainder), denominator);
-		int quotient = nominator / denominator;
+		int quotient = numerator / denominator;
 		
 		boolean awayFromZero;
 		switch (roundingMode) {
@@ -451,10 +450,10 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			awayFromZero = false;
 			break;
 		case CEILING:
-			awayFromZero = nominator > 0;
+			awayFromZero = numerator > 0;
 			break;
 		case FLOOR:
-			awayFromZero = nominator < 0;
+			awayFromZero = numerator < 0;
 			break;
 		case HALF_UP:
 			awayFromZero = halfIndicator >= 0;
@@ -470,7 +469,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			throw new ArithmeticException();
 		}
 		if (awayFromZero) {
-			quotient += Integer.signum(nominator);
+			quotient += Integer.signum(numerator);
 		}
 		return quotient;
 	}
@@ -509,7 +508,7 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			return true;
 		} else if (obj instanceof IntRational) {
 			IntRational intRational = (IntRational) obj;
-			return nominator == intRational.nominator && denominator == intRational.denominator;
+			return numerator == intRational.numerator && denominator == intRational.denominator;
 		} else {
 			return false;
 		}
@@ -517,27 +516,27 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	
 	@Override
 	public int hashCode() {
-		return Objects.hash(nominator, denominator);
+		return Objects.hash(numerator, denominator);
 	}
 	
 	@Override
 	public String toString() {
-		return denominator == 1 ? nominator + "" : nominator + "/" + denominator;
+		return denominator == 1 ? numerator + "" : numerator + "/" + denominator;
 	}
 	
 	@Override
 	public double doubleValue() {
-		return (double) nominator / denominator;
+		return (double) numerator / denominator;
 	}
 	
 	@Override
 	public float floatValue() {
-		return (float) nominator / denominator;
+		return (float) numerator / denominator;
 	}
 	
 	@Override
 	public int intValue() {
-		return nominator / denominator;
+		return numerator / denominator;
 	}
 	
 	@Override
@@ -550,15 +549,15 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 		if (this.equals(o)) {
 			return 0;
 		} else if (isFinite() && o.isFinite()) {
-			return Long.compare((long) nominator * o.denominator, (long) denominator * o.nominator);
+			return Long.compare((long) numerator * o.denominator, (long) denominator * o.numerator);
 		} else if (isNaN()) {
 			return 1;
 		} else if (o.isNaN()) {
 			return -1;
 		} else if (isFinite()) {
-			return -o.nominator;
+			return -o.numerator;
 		} else {
-			return nominator;
+			return numerator;
 		}
 	}
 	
