@@ -1,11 +1,14 @@
 package jamato.algebra;
 
 /**
- * This class provides methods that calculate exponentation. 
+ * This class provides methods that calculate exponentation.
  * @author JSiebel
  *
  */
 public class Exponentation {
+	
+	protected Exponentation() {
+	}
 
 	/**
 	 * Returns <code>(base<sup>exponent</sup>)</code>.
@@ -35,9 +38,6 @@ public class Exponentation {
 	 * @return <code>base<sup>exponent</sup></code>
 	 */
 	public static long pow(long base, long exponent) {
-		if (exponent < 0) {
-			throw new ArithmeticException();
-		}
 		long result = 1;
 		while (exponent > 0) {
 			if ((exponent & 1) == 1) {
@@ -49,6 +49,8 @@ public class Exponentation {
 		return result;
 	}
 	
+	private static final int SQRT_MAX_INT = 46340;
+	
 	/**
 	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
 	 * @param base     the base of the exponentation
@@ -56,14 +58,47 @@ public class Exponentation {
 	 * @param modulus the modulus
 	 * @return <code>base<sup>exponent</sup> % modulus</code>
 	 */
-	public static int powMod(long base, long exponent, int modulus) {
+	public static int powMod(int base, int exponent, int modulus) {
+		if (modulus > SQRT_MAX_INT) {
+			return powMod((long)base, exponent, modulus);
+		}else if (exponent < 0) {
+			throw new ArithmeticException();
+		}else if (modulus <= 0) {
+			throw new IllegalArgumentException("Non-positive modulus: " + modulus);
+		}
+		int basePower = base % modulus;
+		int result = 1;
+		while (exponent > 0) {
+			if ((exponent & 1) == 1) {
+				result = result * basePower % modulus;
+			}
+			exponent >>= 1;
+			basePower = basePower * basePower % modulus;
+		}
+		return result;
+	}
+	
+	/**
+	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
+	 * @param base     the base of the exponentation
+	 * @param exponent the exponent of the exponentation
+	 * @param modulus the modulus
+	 * @return <code>base<sup>exponent</sup> % modulus</code>
+	 */
+	public static int powMod(long base, int exponent, int modulus) {
+		if (exponent < 0) {
+			throw new ArithmeticException();
+		}else if (modulus <= 0) {
+			throw new IllegalArgumentException("Non-positive modulus: " + modulus);
+		}
+		long basePower = base % modulus;
 		long result = 1;
 		while (exponent > 0) {
 			if ((exponent & 1) == 1) {
-				result = result * base % modulus;
+				result = result * basePower % modulus;
 			}
 			exponent >>= 1;
-			base = base * base % modulus;
+			basePower = basePower * basePower % modulus;
 		}
 		return (int) result;
 	}

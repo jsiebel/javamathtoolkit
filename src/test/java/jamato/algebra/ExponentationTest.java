@@ -14,14 +14,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import jamato.number.IntRational;
 
 class ExponentationTest {
-
+	
 	@ParameterizedTest
 	@MethodSource
 	void testPow(int base, int exponent, int result) {
 		assertEquals(result, pow(base, exponent));
 	}
 	
-	static Stream<Arguments> testPow(){
+	static Stream<Arguments> testPow() {
 		return Stream.of(
 				Arguments.of(2, 5, 32),
 				Arguments.of(-7, 2, 49),
@@ -42,7 +42,6 @@ class ExponentationTest {
 		assertEquals(IntRational.ONE, pow(IntRational.ONE, Integer.MIN_VALUE, IntRational.ONE));
 	}
 	
-
 	@ParameterizedTest
 	@MethodSource
 	void testPowMod(int base, int exponent, int modulus, int result) {
@@ -53,6 +52,21 @@ class ExponentationTest {
 		return Stream.of(
 				Arguments.of(0, 0, 37, 1),
 				Arguments.of(-7, 3, 1000, -343),
-				Arguments.of(1000, 371, 9, 1));
+				Arguments.of(1000, 371, 9, 1),
+				Arguments.of(46341, 2, 1000000, 488281));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testPowModLong(long base, int exponent, int modulus, int result) {
+		assertEquals(result, powMod(base, exponent, modulus));
+	}
+	
+	static Stream<Arguments> testPowModLong() {
+		return Stream.of(
+				Arguments.of(0, 0, 37, 1),
+				Arguments.of(-7, 3, 1000, -343),
+				Arguments.of(1000, 371, 9, 1),
+				Arguments.of(Long.MAX_VALUE / 4, 2, Integer.MAX_VALUE, 536870912));
 	}
 }
