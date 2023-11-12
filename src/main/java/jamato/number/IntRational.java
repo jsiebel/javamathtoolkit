@@ -18,10 +18,10 @@ import jamato.algebra.Ring;
  * @author JSiebel
  *
  */
-public class IntRational extends Number implements Ring<IntRational>, Comparable<IntRational>{
+public class IntRational extends Number implements Ring<IntRational>, Comparable<IntRational> {
 	
 	private static final long serialVersionUID = -1358115182615374506L;
-
+	
 	/** The IntRational constant 0 */
 	public static final IntRational ZERO = new IntRational(0, 1);
 	
@@ -36,13 +36,13 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 	
 	/** The IntRational constant negative infinity */
 	public static final IntRational NEGATIVE_INFINITY = new IntRational(-1, 0);
-
+	
 	/** The numerator of this IntRational. */
 	public final int numerator;
-
+	
 	/** The denominator of this IntRational. */
 	public final int denominator;
-
+	
 	/**
 	 * Creates an IntRational with the value equal to {@code numerator/denominator}. If the denominator is {@code 0},
 	 * the result is {@link #POSITIVE_INFINITY} (for positive numerators), {@link #NEGATIVE_INFINITY} (for negative
@@ -119,24 +119,13 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			denominator = 1;
 		} else {
 			/*
-			 * The value is approximated by a continued fraction: Starting with
-			 * value = r_0, in each step the remainder r_n is replaced by
-			 * 		r_n = f_(n+1) + 1/r_(n+1)
-			 * where f_n is an integer close to r_n. The resulting continued
-			 * fraction (with a double at the innermost denominator)
-			 * 		value = f_0+1/(f_1+1/(f_2+...1/(f_n+r_n)...))
-			 * can be expressed as a simple fraction:
-			 * 		value = (a_n+b_n*r_n) / (c_n+d_n*r_n).
-			 * The fraction's coefficients can be calculated iteratively:
-			 * 		a_1 = 1
-			 * 		b_1 = f_1
-			 * 		c_1 = 0
-			 * 		d_1 = 1
-			 * 		a_(n+1) = b_n
-			 * 		b_(n+1) = a_n + b_n * f_(n+1)
-			 * 		c_(n+1) = d_n
-			 * 		d_(n+1) = c_n + d_n * f_(n+1)
-			 * If the remainder r_n is zero, then the value = b_n / d_n
+			 * The value is approximated by a continued fraction: Starting with value = r_0, in each step the remainder
+			 * r_n is replaced by r_n = f_(n+1) + 1/r_(n+1) where f_n is an integer close to r_n. The resulting
+			 * continued fraction (with a double at the innermost denominator) value =
+			 * f_0+1/(f_1+1/(f_2+...1/(f_n+r_n)...)) can be expressed as a simple fraction: value = (a_n+b_n*r_n) /
+			 * (c_n+d_n*r_n). The fraction's coefficients can be calculated iteratively: a_1 = 1 b_1 = f_1 c_1 = 0 d_1 =
+			 * 1 a_(n+1) = b_n b_(n+1) = a_n + b_n * f_(n+1) c_(n+1) = d_n d_(n+1) = c_n + d_n * f_(n+1) If the
+			 * remainder r_n is zero, then the value = b_n / d_n
 			 */
 			double floor = Math.floor(value);
 			double remainder = value - floor;
@@ -176,14 +165,16 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			}
 		}
 	}
-
+	
 	private static boolean isInIntRange(double d) {
 		return Integer.MIN_VALUE <= d && d <= Integer.MAX_VALUE;
 	}
 	
 	@Override
 	public IntRational negate() {
-		if (numerator == Integer.MIN_VALUE) {
+		if (!isFinite()) {
+			return getNonFiniteValueBySign(-signum());
+		} else if (numerator == Integer.MIN_VALUE) {
 			return POSITIVE_INFINITY;
 		} else {
 			return new IntRational(-numerator, denominator, 1);
@@ -581,7 +572,6 @@ public class IntRational extends Number implements Ring<IntRational>, Comparable
 			throw new NumberFormatException();
 		}
 	}
-
 	
 	/**
 	 * Returns an non-finite value with the same sign as the argument: {@link #NEGATIVE_INFINITY}, {@link #NAN} or

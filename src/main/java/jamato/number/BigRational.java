@@ -8,36 +8,39 @@ import jamato.algebra.GCD;
 import jamato.algebra.Ring;
 
 /**
- * An immutable arbitrary-precision rational number. The numerator and
- * denominator are reduced, the numerator is never negative.
+ * An immutable arbitrary-precision rational number. The numerator and denominator are reduced, the numerator is never
+ * negative.
  * <p>
- * Operations on the special values {@link #POSITIVE_INFINITY},
- * {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like their equivalents in
- * the {@link Double} class.
+ * Operations on the special values {@link #POSITIVE_INFINITY}, {@link #NEGATIVE_INFINITY} and {@link #NAN} behave like
+ * their equivalents in the {@link Double} class.
  * 
  * @author JSiebel
  *
  */
-public class BigRational extends Number implements Ring<BigRational>, Comparable<BigRational>{
+public class BigRational extends Number implements Ring<BigRational>, Comparable<BigRational> {
 	
 	private static final int DOUBLE_MANTISSA_BITS = 52;
-
+	
 	private static final long serialVersionUID = -1358115182615374506L;
 	
 	/** The BigRational constant 0 */
 	public static final BigRational ZERO = new BigRational(BigInteger.ZERO, BigInteger.ONE);
+	
 	/** The BigRational constant 1 */
 	public static final BigRational ONE = new BigRational(BigInteger.ONE, BigInteger.ONE);
+	
 	/** The BigRational constant NAN */
 	public static final BigRational NAN = new BigRational(BigInteger.ZERO, BigInteger.ZERO);
+	
 	/** The BigRational constant positive infinity */
 	public static final BigRational POSITIVE_INFINITY = new BigRational(BigInteger.ONE, BigInteger.ZERO);
+	
 	/** The BigRational constant negative infinity */
 	public static final BigRational NEGATIVE_INFINITY = new BigRational(BigInteger.ONE.negate(), BigInteger.ZERO);
 	
 	/** The numerator of this BigRational. */
 	public final BigInteger numerator;
-
+	
 	/** The denominator of this BigRational. The denominator is never negative. */
 	public final BigInteger denominator;
 	
@@ -61,7 +64,6 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	public BigRational(BigInteger numerator) {
 		this(numerator, BigInteger.ONE);
 	}
-
 	
 	/**
 	 * Creates a BigRational with the value equal to {@code numerator/denominator}. If the denominator is {@code 0}, the
@@ -101,10 +103,11 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	}
 	
 	/**
-	 * Minimum number of zeros in a double value where it is assumed that the value
-	 * is an integer scaled by a power of two.
+	 * Minimum number of zeros in a double value where it is assumed that the value is an integer scaled by a power of
+	 * two.
 	 */
 	private static final int TRAILING_ZERO_LIMIT = 10;
+	
 	private static final long MANTISSA_MASK = 0x000fffffffffffffL;
 	
 	/**
@@ -118,44 +121,32 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		if (!Double.isFinite(value)) {
 			numerator = BigInteger.valueOf((long) Math.signum(value));
 			denominator = BigInteger.ZERO;
-		}else if (value == 0) {
+		} else if (value == 0) {
 			numerator = BigInteger.ZERO;
 			denominator = BigInteger.ONE;
 		} else {
 			/*
-			 * The value is approximated by a continued fraction: Starting with
-			 * value = r_0, in each step the remainder r_n is replaced by
-			 * 		r_n = f_(n+1) + 1/r_(n+1)
-			 * where f_n is an integer close to r_n. The resulting continued
-			 * fraction (with a double at the innermost denominator)
-			 * 		value = f_0+1/(f_1+1/(f_2+...1/(f_n+r_n)...))
-			 * can be expressed as a simple fraction:
-			 * 		value = (a_n+b_n*r_n) / (c_n+d_n*r_n).
-			 * The fraction's coefficients can be calculated iteratively:
-			 * 		a_1 = 1
-			 * 		b_1 = f_1
-			 * 		c_1 = 0
-			 * 		d_1 = 1
-			 * 		a_(n+1) = b_n
-			 * 		b_(n+1) = a_n + b_n * f_(n+1)
-			 * 		c_(n+1) = d_n
-			 * 		d_(n+1) = c_n + d_n * f_(n+1)
-			 * If the remainder r_n is zero, then the value = b_n / d_n
+			 * The value is approximated by a continued fraction: Starting with value = r_0, in each step the remainder
+			 * r_n is replaced by r_n = f_(n+1) + 1/r_(n+1) where f_n is an integer close to r_n. The resulting
+			 * continued fraction (with a double at the innermost denominator) value =
+			 * f_0+1/(f_1+1/(f_2+...1/(f_n+r_n)...)) can be expressed as a simple fraction: value = (a_n+b_n*r_n) /
+			 * (c_n+d_n*r_n). The fraction's coefficients can be calculated iteratively: a_1 = 1 b_1 = f_1 c_1 = 0 d_1 =
+			 * 1 a_(n+1) = b_n b_(n+1) = a_n + b_n * f_(n+1) c_(n+1) = d_n d_(n+1) = c_n + d_n * f_(n+1) If the
+			 * remainder r_n is zero, then the value = b_n / d_n
 			 */
 			int exponent;
 			if (Math.getExponent(value) >= DOUBLE_MANTISSA_BITS) {
 				exponent = Math.getExponent(value) - DOUBLE_MANTISSA_BITS;
-			}else if (Long.numberOfTrailingZeros(mantissa) > TRAILING_ZERO_LIMIT) {
+			} else if (Long.numberOfTrailingZeros(mantissa) > TRAILING_ZERO_LIMIT) {
 				/*
-				 * The mantissa has many trailing zeros, so it's probably an integer scaled by a
-				 * power of two.
+				 * The mantissa has many trailing zeros, so it's probably an integer scaled by a power of two.
 				 */
 				int numberOfTrailingZeros = mantissa == 0 ? DOUBLE_MANTISSA_BITS : Long.numberOfTrailingZeros(mantissa);
 				exponent = Math.getExponent(value) - DOUBLE_MANTISSA_BITS + numberOfTrailingZeros;
-			}else if (Math.getExponent(value) < 0) {
+			} else if (Math.getExponent(value) < 0) {
 				/* Scale small values to prevent overflows when casting the inverse to long. */
 				exponent = Math.getExponent(value);
-			}else {
+			} else {
 				exponent = 0;
 			}
 			double scaledValue = Math.scalb(value, -exponent);
@@ -181,7 +172,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 				b = bNext;
 				c = d;
 				d = dNext;
-
+				
 				result = (double) b / d;
 				double difference = Math.abs(result - scaledValue);
 				if (difference < bestDifference) {
@@ -225,10 +216,14 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			return signum * Math.scalb(mantissa.doubleValue(), -exponent);
 		}
 	}
-
+	
 	@Override
 	public BigRational negate() {
-		return new BigRational(numerator.negate(), denominator, BigInteger.ONE);
+		if (!isFinite()) {
+			return getNonFiniteValueBySign(-signum());
+		} else {
+			return new BigRational(numerator.negate(), denominator, BigInteger.ONE);
+		}
 	}
 	
 	@Override
@@ -254,9 +249,10 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			return NAN;
 		}
 	}
-
+	
 	/**
 	 * Returns a BigRational with the value {@code (this + summand)}.
+	 * 
 	 * @param summand value to be added to this BigRational
 	 * @return {@code (this + summand)}
 	 */
@@ -328,7 +324,15 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	
 	@Override
 	public BigRational invert() {
-		return new BigRational(denominator, numerator, BigInteger.ONE);
+		if (isZero()) {
+			return POSITIVE_INFINITY;
+		} else if (isFinite()) {
+			return new BigRational(denominator, numerator, BigInteger.ONE);
+		} else if (isNaN()) {
+			return NAN;
+		} else {
+			return ZERO;
+		}
 	}
 	
 	@Override
@@ -441,7 +445,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	public int signum() {
 		return numerator.signum();
 	}
-
+	
 	/**
 	 * Returns the absolute value of this.
 	 * 
@@ -454,7 +458,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 			return this;
 		}
 	}
-
+	
 	/**
 	 * Rounds this number towards negative infinity.
 	 * <p>
@@ -470,7 +474,7 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	public BigInteger floor() {
 		return round(RoundingMode.FLOOR);
 	}
-
+	
 	/**
 	 * Rounds this number towards positive infinity.
 	 * <p>
@@ -486,10 +490,9 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	public BigInteger ceil() {
 		return round(RoundingMode.CEILING);
 	}
-
+	
 	/**
-	 * Rounds this number to the next integer, or away from zero if the two neighbor
-	 * integers have the same distance.
+	 * Rounds this number to the next integer, or away from zero if the two neighbor integers have the same distance.
 	 * <p>
 	 * Special cases:
 	 * <ul>
@@ -515,9 +518,8 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	 * 
 	 * @param roundingMode a {@link RoundingMode}
 	 * @return the rounded number as a {@link BigInteger}
-	 * @throws ArithmeticException if this number is infinite, or if roundingMode
-	 *                             is {@link RoundingMode#UNNECESSARY} and this
-	 *                             number is not an integer.
+	 * @throws ArithmeticException if this number is infinite, or if roundingMode is {@link RoundingMode#UNNECESSARY}
+	 * and this number is not an integer.
 	 */
 	public BigInteger round(RoundingMode roundingMode) {
 		if (isInteger()) {
@@ -563,31 +565,29 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		}
 		return quotient;
 	}
-
-    /**
-     * Returns {@code true} if this is BigRational finite; returns {@code false} otherwise (for NaN and infinity).
-     *
-     * @return {@code true} if the argument is a finite, {@code false} otherwise
-     */
+	
+	/**
+	 * Returns {@code true} if this is BigRational finite; returns {@code false} otherwise (for NaN and infinity).
+	 *
+	 * @return {@code true} if the argument is a finite, {@code false} otherwise
+	 */
 	public boolean isFinite() {
 		return denominator.signum() != 0;
 	}
-
+	
 	/**
 	 * Returns {@code true} if this is {@link #NAN}, {@code false} otherwise.
 	 *
-	 * @return {@code true} if this is NaN; {@code false}
-	 *         otherwise.
+	 * @return {@code true} if this is NaN; {@code false} otherwise.
 	 */
 	public boolean isNaN() {
 		return equals(NAN);
 	}
-
+	
 	/**
 	 * Returns {@code true} if this is an integer, {@code false} otherwise.
 	 *
-	 * @return {@code true} if this is an integer; {@code false}
-	 *         otherwise.
+	 * @return {@code true} if this is an integer; {@code false} otherwise.
 	 */
 	public boolean isInteger() {
 		return denominator.equals(BigInteger.ONE);
@@ -634,17 +634,16 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 	public long longValue() {
 		return bigIntegerValue().longValue();
 	}
-
-    /**
-     * Returns the value of the specified number as a {@code BigInteger}.
-     *
-     * @return  the numeric value represented by this object after conversion
-     *          to type {@code BigInteger}
-     */
+	
+	/**
+	 * Returns the value of the specified number as a {@code BigInteger}.
+	 *
+	 * @return the numeric value represented by this object after conversion to type {@code BigInteger}
+	 */
 	public BigInteger bigIntegerValue() {
 		return numerator.divide(denominator);
 	}
-
+	
 	@Override
 	public int compareTo(BigRational o) {
 		if (this.equals(o)) {
@@ -662,16 +661,14 @@ public class BigRational extends Number implements Ring<BigRational>, Comparable
 		}
 	}
 	
-    /**
-	 * Translates the decimal String representation of a BigRational into a
-	 * BigRational. The String representation consists of either two decimal numbers
-	 * separated by a slash ("/"), or a single decimal number. Whitespace is not
+	/**
+	 * Translates the decimal String representation of a BigRational into a BigRational. The String representation
+	 * consists of either two decimal numbers separated by a slash ("/"), or a single decimal number. Whitespace is not
 	 * allowed.
 	 *
 	 * @param string the decimal String representation of a BigRational
-     * @return a BigRational with the specified value
-	 * @throws NumberFormatException if {@code string} is not a valid representation
-	 *                               of a BigRational
+	 * @return a BigRational with the specified value
+	 * @throws NumberFormatException if {@code string} is not a valid representation of a BigRational
 	 */
 	public static BigRational valueOf(String string) {
 		String[] parts = string.split("/");

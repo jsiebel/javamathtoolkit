@@ -6,6 +6,7 @@ import static jamato.number.BigRational.ONE;
 import static jamato.number.BigRational.POSITIVE_INFINITY;
 import static jamato.number.BigRational.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.math.BigInteger;
 import java.math.RoundingMode;
@@ -122,16 +123,36 @@ class BigRationalTest {
 				Arguments.of(new BigRational(1, Integer.MAX_VALUE), new BigRational(-1, Integer.MAX_VALUE), ZERO),
 				Arguments.of(new BigRational(Integer.MAX_VALUE), new BigRational(-Integer.MAX_VALUE), ZERO),
 				Arguments.of(ZERO, ZERO, ZERO),
-				Arguments.of(ONE, NAN, NAN),
-				Arguments.of(NAN, ONE, NAN),
-				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
-				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
-				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NEGATIVE_INFINITY),
 				
-				Arguments.of(new BigRational(17, 18), new BigRational(-19), new BigRational(-325, 18)),
-				Arguments.of(NAN, new BigRational(17), NAN),
-				Arguments.of(POSITIVE_INFINITY, new BigRational(217), POSITIVE_INFINITY),
-				Arguments.of(NEGATIVE_INFINITY, new BigRational(99739), NEGATIVE_INFINITY));
+				Arguments.of(new BigRational(17, 18), new BigRational(-19), new BigRational(-325, 18)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testAddNonFinite(BigRational summand1, BigRational summand2, BigRational result) {
+		assertSame(result, summand1.add(summand2));
+	}
+	
+	static Stream<Arguments> testAddNonFinite() {
+		return Stream.of(
+				Arguments.of(NAN, NAN, NAN),
+				Arguments.of(NAN, NEGATIVE_INFINITY, NAN),
+				Arguments.of(NAN, new BigRational(756), NAN),
+				Arguments.of(NAN, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(NEGATIVE_INFINITY, NAN, NAN),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(-757), NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(new BigRational(758), NAN, NAN),
+				Arguments.of(new BigRational(-759), NEGATIVE_INFINITY, NEGATIVE_INFINITY),
+				Arguments.of(new BigRational(760), POSITIVE_INFINITY, POSITIVE_INFINITY),
+				
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(-761), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY));
 	}
 	
 	@ParameterizedTest
@@ -147,17 +168,36 @@ class BigRationalTest {
 				Arguments.of(new BigRational(27, 50), new BigRational(2, 50), new BigRational(1, 2)),
 				Arguments.of(new BigRational(1, Integer.MAX_VALUE), new BigRational(1, Integer.MAX_VALUE), ZERO),
 				Arguments.of(new BigRational(Integer.MAX_VALUE), new BigRational(Integer.MAX_VALUE), ZERO),
-				Arguments.of(ONE, NAN, NAN),
-				Arguments.of(NAN, ONE, NAN),
-				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(new BigRational(100, 11), new BigRational(11), new BigRational(-21, 11)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSubtractNonFinite(BigRational minuend, BigRational subtrahend, BigRational result) {
+		assertSame(result, minuend.subtract(subtrahend));
+	}
+	
+	static Stream<Arguments> testSubtractNonFinite() {
+		return Stream.of(
+				Arguments.of(NAN, NAN, NAN),
+				Arguments.of(NAN, NEGATIVE_INFINITY, NAN),
+				Arguments.of(NAN, new BigRational(-220), NAN),
+				Arguments.of(NAN, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(NEGATIVE_INFINITY, NAN, NAN),
 				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
-				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, new BigRational(221), NEGATIVE_INFINITY),
 				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NEGATIVE_INFINITY),
 				
-				Arguments.of(new BigRational(100, 11), new BigRational(11), new BigRational(-21, 11)),
-				Arguments.of(NAN, new BigRational(17), NAN),
-				Arguments.of(POSITIVE_INFINITY, new BigRational(217), POSITIVE_INFINITY),
-				Arguments.of(NEGATIVE_INFINITY, new BigRational(9973), NEGATIVE_INFINITY));
+				Arguments.of(new BigRational(-222), NAN, NAN),
+				Arguments.of(new BigRational(223), NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(new BigRational(-224), POSITIVE_INFINITY, NEGATIVE_INFINITY),
+				
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, new BigRational(225), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN));
 	}
 	
 	@ParameterizedTest

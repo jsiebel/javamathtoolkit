@@ -6,6 +6,7 @@ import static jamato.number.IntRational.ONE;
 import static jamato.number.IntRational.POSITIVE_INFINITY;
 import static jamato.number.IntRational.ZERO;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.math.RoundingMode;
 import java.util.stream.Stream;
@@ -110,15 +111,38 @@ class IntRationalTest {
 				Arguments.of(new IntRational(13, 30), new IntRational(2, 30), new IntRational(1, 2)),
 				Arguments.of(new IntRational(1, Integer.MAX_VALUE), new IntRational(-1, Integer.MAX_VALUE), ZERO),
 				Arguments.of(new IntRational(Integer.MAX_VALUE), new IntRational(-Integer.MAX_VALUE), ZERO),
-				Arguments.of(ZERO, ZERO, ZERO),
-				Arguments.of(ONE, NAN, NAN),
-				Arguments.of(NAN, ONE, NAN),
-				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
-				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(
+						new IntRational(1, 1_000_000_000 - 1),
+						new IntRational(1, 1_000_000_000 + 1),
+						new IntRational(2, 1_000_000_000)));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testAddNonFinite(IntRational summand1, IntRational summand2, IntRational result) {
+		assertSame(result, summand1.add(summand2));
+	}
+	
+	static Stream<Arguments> testAddNonFinite() {
+		return Stream.of(
+				Arguments.of(NAN, NAN, NAN),
+				Arguments.of(NAN, NEGATIVE_INFINITY, NAN),
+				Arguments.of(NAN, new IntRational(756), NAN),
+				Arguments.of(NAN, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(NEGATIVE_INFINITY, NAN, NAN),
 				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NEGATIVE_INFINITY),
-				Arguments.of(new IntRational(1_000_000_000), new IntRational(2_000_000_000), POSITIVE_INFINITY),
-				Arguments.of(new IntRational(1, 1_000_000_000-1),new IntRational(1, 1_000_000_000+1),new IntRational(2, 1_000_000_000))
-		);
+				Arguments.of(NEGATIVE_INFINITY, new IntRational(-757), NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(new IntRational(758), NAN, NAN),
+				Arguments.of(new IntRational(-759), NEGATIVE_INFINITY, NEGATIVE_INFINITY),
+				Arguments.of(new IntRational(760), POSITIVE_INFINITY, POSITIVE_INFINITY),
+				
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(POSITIVE_INFINITY, new IntRational(-761), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, POSITIVE_INFINITY));
 	}
 	
 	@ParameterizedTest
@@ -148,17 +172,39 @@ class IntRationalTest {
 				Arguments.of(new IntRational(27, 50), new IntRational(2, 50), new IntRational(1, 2)),
 				Arguments.of(new IntRational(1, Integer.MAX_VALUE), new IntRational(1, Integer.MAX_VALUE), ZERO),
 				Arguments.of(new IntRational(Integer.MAX_VALUE), new IntRational(Integer.MAX_VALUE), ZERO),
-				Arguments.of(ONE, NAN, NAN),
-				Arguments.of(NAN, ONE, NAN),
 				Arguments.of(
 						new IntRational(-1, 2_000_000_000 - 1),
 						new IntRational(1, 2_000_000_000 + 1),
 						new IntRational(-2, 2_000_000_000)),
-				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN),
-				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
-				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
-				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NEGATIVE_INFINITY),
 				Arguments.of(new IntRational(-1_000_000_000), new IntRational(2_000_000_000), NEGATIVE_INFINITY));
+	}
+	
+	@ParameterizedTest
+	@MethodSource
+	void testSubtractNonFinite(IntRational minuend, IntRational subtrahend, IntRational result) {
+		assertSame(result, minuend.subtract(subtrahend));
+	}
+	
+	static Stream<Arguments> testSubtractNonFinite() {
+		return Stream.of(
+				Arguments.of(NAN, NAN, NAN),
+				Arguments.of(NAN, NEGATIVE_INFINITY, NAN),
+				Arguments.of(NAN, new IntRational(-220), NAN),
+				Arguments.of(NAN, POSITIVE_INFINITY, NAN),
+				
+				Arguments.of(NEGATIVE_INFINITY, NAN, NAN),
+				Arguments.of(NEGATIVE_INFINITY, NEGATIVE_INFINITY, NAN),
+				Arguments.of(NEGATIVE_INFINITY, new IntRational(221), NEGATIVE_INFINITY),
+				Arguments.of(NEGATIVE_INFINITY, POSITIVE_INFINITY, NEGATIVE_INFINITY),
+				
+				Arguments.of(new IntRational(-222), NAN, NAN),
+				Arguments.of(new IntRational(223), NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(new IntRational(-224), POSITIVE_INFINITY, NEGATIVE_INFINITY),
+				
+				Arguments.of(POSITIVE_INFINITY, NAN, NAN),
+				Arguments.of(POSITIVE_INFINITY, NEGATIVE_INFINITY, POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, new IntRational(225), POSITIVE_INFINITY),
+				Arguments.of(POSITIVE_INFINITY, POSITIVE_INFINITY, NAN));
 	}
 	
 	@ParameterizedTest
