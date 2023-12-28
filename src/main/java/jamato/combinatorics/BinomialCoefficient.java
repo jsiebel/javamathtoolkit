@@ -1,4 +1,4 @@
-package combinatorics;
+package jamato.combinatorics;
 
 import static java.math.BigInteger.ONE;
 

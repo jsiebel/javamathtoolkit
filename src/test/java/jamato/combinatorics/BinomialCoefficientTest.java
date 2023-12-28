@@ -16,7 +16,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import combinatorics.BinomialCoefficient;
 import jamato.algebra.Ring;
 import jamato.number.DoubleComplex;
 import jamato.number.IntRational;
