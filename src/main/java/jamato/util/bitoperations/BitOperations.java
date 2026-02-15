@@ -90,4 +90,50 @@ public class BitOperations {
 		return index == Long.SIZE - 1 || shiftedValue == 0 ? 64 : index + Long.numberOfTrailingZeros(shiftedValue) + 1;
 	}
 	
+	/**
+	 * Returns the offset of the n-th set bit in the given value, starting at <code>n=0</code> for the lowest set bit.
+	 * If no bits are set (i.e. <code>value=0</code>) or there are less than <code>n+1</code> bits in the value, 32 is
+	 * returned. For example, <code>offsetOfNthBit(0b01100101, 2) = 5</code>.
+	 * 
+	 * <pre>
+	 * 0b01100101
+	 *    ^^  ^ ^
+	 *    65  2 0
+	 * </pre>
+	 * 
+	 * @param value an integer value
+	 * @param n the
+	 * @return the offset of the n-th set bit
+	 */
+	public static int offsetOfNthBit(int value, int n) {
+		int remainder = value;
+		for (int i = 0; i < n && remainder != 0; i++) {
+			remainder &= ~Integer.lowestOneBit(remainder);
+		}
+		return Integer.numberOfTrailingZeros(remainder);
+	}
+	
+	/**
+	 * Returns the offset of the n-th set bit in the given value, starting at <code>n=0</code> for the lowest set bit.
+	 * If no bits are set (i.e. <code>value=0</code>) or there are less than <code>n+1</code> bits in the value, 32 is
+	 * returned. For example, <code>offsetOfNthBit(0b01100101L, 2) = 5</code>.
+	 * 
+	 * <pre>
+	 * 0b01100101
+	 *    ^^  ^ ^
+	 *    65  2 0
+	 * </pre>
+	 * 
+	 * @param value an integer value
+	 * @param n the
+	 * @return the offset of the n-th set bit
+	 */
+	public static int offsetOfNthBit(long value, int n) {
+		long remainder = value;
+		for (int i = 0; i < n && remainder != 0; i++) {
+			remainder &= ~Long.lowestOneBit(remainder);
+		}
+		return Long.numberOfTrailingZeros(remainder);
+	}
+	
 }
