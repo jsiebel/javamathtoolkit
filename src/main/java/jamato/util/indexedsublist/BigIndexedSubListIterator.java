@@ -10,7 +10,6 @@ import jamato.util.bitoperations.BitOperations;
  * A {@link ListIterator} for {@link BigIndexedSubList}s. This iterator does not support any modifying operations.
  * 
  * @author JSiebel
- *
  * @param <E> the type of elements returned by this list iterator
  */
 class BigIndexedSubListIterator<E> implements ListIterator<E> {
@@ -19,10 +18,10 @@ class BigIndexedSubListIterator<E> implements ListIterator<E> {
 	private final List<E> list;
 	
 	/**
-	 * The index mask. The <code>2^i</code> bit indicates the presence of the base list element with index
-	 * <code>i</code>.
+	 * The index mask array. The offset <code>i</code> bit of the array entry at index <code>j</code> indicates the
+	 * presence of the base list element with index <code>32*j+i</code>.
 	 */
-	private final long[] maskArray;
+	private final int[] maskArray;
 	
 	/**
 	 * The index of the current <code>IndexedSubList</code> element. The value is 0 if {@link #hasPrevious()} is false,
@@ -36,40 +35,35 @@ class BigIndexedSubListIterator<E> implements ListIterator<E> {
 	private int maskArrayIndex;
 	
 	/**
-	 * The bit index in the current mask array element. The value is <code>64</code> if {@link #hasNext()} is false.
+	 * The bit index in the current mask array element. The value is <code>32</code> if {@link #hasNext()} is false.
 	 */
 	private int maskBitIndex;
 	
 	/**
-	 * Creates a new IndexedSubListIterator for a {@link BigIndexedSubList}.
+	 * Creates a new BigIndexedSubListIterator for a {@link BigIndexedSubList}.
 	 * 
 	 * @param list the list that is referenced by the indices
 	 * @param indexMask a bit mask indicating which elements of the base list are contained in the BigIndexedSubList.
-	 * @param startIndex the initial index in the IndexedSubList
+	 * @param startIndex the initial index in the BigIndexedSubList
 	 */
-	public BigIndexedSubListIterator(List<E> list, long[] maskArray, int startIndex) {
+	public BigIndexedSubListIterator(List<E> list, int[] maskArray, int startIndex) {
 		this.list = list;
-		this.maskArray = maskArray.length == 0 ? new long[] { 0 } : maskArray;
+		this.maskArray = maskArray.length == 0 ? new int[] {0} : maskArray;
+		this.index = startIndex;
 		int totalBitcount = 0;
 		
 		this.maskArrayIndex = 0;
 		while (maskArrayIndex < this.maskArray.length - 1
-				&& totalBitcount + Long.bitCount(this.maskArray[maskArrayIndex]) <= startIndex) {
-			totalBitcount += Long.bitCount(this.maskArray[maskArrayIndex]);
+				&& totalBitcount + Integer.bitCount(this.maskArray[maskArrayIndex]) <= startIndex) {
+			totalBitcount += Integer.bitCount(this.maskArray[maskArrayIndex]);
 			this.maskArrayIndex++;
 		}
-		long mask = this.maskArray[maskArrayIndex];
-		while (totalBitcount < startIndex) {
-			totalBitcount++;
-			mask &= mask - 1;
-		}
-		this.maskBitIndex = Long.numberOfTrailingZeros(mask);
-		this.index = startIndex;
+		this.maskBitIndex = BitOperations.offsetOfNthBit(this.maskArray[maskArrayIndex], startIndex - totalBitcount);
 	}
 	
 	@Override
 	public boolean hasNext() {
-		return maskBitIndex < Long.SIZE;
+		return maskBitIndex < Integer.SIZE;
 	}
 	
 	@Override
@@ -77,15 +71,15 @@ class BigIndexedSubListIterator<E> implements ListIterator<E> {
 		if (!hasNext()) {
 			throw new NoSuchElementException();
 		}
-		E result = list.get(maskArrayIndex << 6 | maskBitIndex);
+		E result = list.get(maskArrayIndex << 5 | maskBitIndex);
 		index++;
 		maskBitIndex = BitOperations.indexOfNextHigherOneBit(maskArray[maskArrayIndex], maskBitIndex);
-		if (maskBitIndex == 64 && maskArrayIndex < maskArray.length - 1) {
+		if (maskBitIndex == Integer.SIZE && maskArrayIndex < maskArray.length - 1) {
 			maskArrayIndex++;
 			while (maskArrayIndex < maskArray.length - 1 && maskArray[maskArrayIndex] == 0) {
 				maskArrayIndex++;
 			}
-			maskBitIndex = Long.numberOfTrailingZeros(maskArray[maskArrayIndex]);
+			maskBitIndex = Integer.numberOfTrailingZeros(maskArray[maskArrayIndex]);
 		}
 		return result;
 	}
@@ -107,9 +101,9 @@ class BigIndexedSubListIterator<E> implements ListIterator<E> {
 			while (maskArray[maskArrayIndex] == 0) {
 				maskArrayIndex--;
 			}
-			maskBitIndex = 63 - Long.numberOfLeadingZeros(maskArray[maskArrayIndex]);
+			maskBitIndex = 31 - Integer.numberOfLeadingZeros(maskArray[maskArrayIndex]);
 		}
-		return list.get(maskArrayIndex << 6 | maskBitIndex);
+		return list.get(maskArrayIndex << 5 | maskBitIndex);
 	}
 	
 	@Override

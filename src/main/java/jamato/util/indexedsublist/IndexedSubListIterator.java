@@ -10,7 +10,6 @@ import jamato.util.bitoperations.BitOperations;
  * A {@link ListIterator} for {@link IndexedSubList}s. This iterator does not support any modifying operations.
  * 
  * @author JSiebel
- *
  * @param <E> the type of elements returned by this list iterator
  */
 class IndexedSubListIterator<E> implements ListIterator<E> {
@@ -46,11 +45,7 @@ class IndexedSubListIterator<E> implements ListIterator<E> {
 		this.list = list;
 		this.mask = mask;
 		this.index = startIndex;
-		long maskRemainder = mask;
-		for (int i = 0; i < startIndex; i++) {
-			maskRemainder &= maskRemainder - 1;
-		}
-		this.maskIndex = Long.numberOfTrailingZeros(maskRemainder);
+		this.maskIndex = BitOperations.offsetOfNthBit(mask, startIndex);
 	}
 	
 	@Override

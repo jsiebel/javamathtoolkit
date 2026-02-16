@@ -7,11 +7,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import jamato.util.bitoperations.BitOperations;
+
 /**
  * An indexed sublist is an immutable list that references elements of a base list by their indexes.
  * 
  * @author JSiebel
- *
  * @param <E> the type of elements in this list
  */
 public class BigIndexedSubList<E> extends AbstractList<E> {
@@ -20,28 +21,30 @@ public class BigIndexedSubList<E> extends AbstractList<E> {
 	private final List<E> baseList;
 	
 	/**
-	 * The index mask. The <code>2^i</code> bit of <code>indexMask[j]</code> indicates the presence of the base list
-	 * element with index <code>64*j+i</code>.
+	 * The index mask. The <code>2<sup>i</sup></code> bit of <code>indexMask[j]</code> indicates the presence of the
+	 * base list element with index <code>32*j+i</code>.
 	 */
-	private final long[] indexMask;
+	private final int[] indexMask;
 	
 	/** The size of this list. */
 	private int size;
 	
 	/**
 	 * Creates a new BigIndexedSubList of elements in the base list. The <code>2^i</code> bit of
-	 * <code>indexMask[j]</code> indicates the presence of the base list element with index <code>64*j+i</code>. This
-	 * list is backed by the base list; structural changes in that list are not allowed.
+	 * <code>indexMask[j]</code> indicates the presence of the base list element with index <code>32*j+i</code>. This
+	 * list is backed by the base list; structural changes in that list are not allowed. The size index mask doesn't
+	 * need to match the size of the base list, but may not have one-bits outside the list's range.
 	 * 
 	 * @param baseList the list that serves as a base for this list
 	 * @param indexMask a bit mask indicating which elements of the base list are contained in this list
+	 * @throws IndexOutOfBoundsException if a bit in the mask references a non-existing list index
 	 */
-	public BigIndexedSubList(List<E> baseList, long... indexMask) {
+	public BigIndexedSubList(List<E> baseList, int... indexMask) {
 		checkMaskBits(indexMask, baseList.size());
 		this.baseList = baseList;
-		this.indexMask = Arrays.copyOf(indexMask, (baseList.size() + 63) >> 6);
-		for (long mask : indexMask) {
-			this.size += Long.bitCount(mask);
+		this.indexMask = Arrays.copyOf(indexMask, (baseList.size() + Integer.SIZE - 1) / Integer.SIZE);
+		for (int mask : indexMask) {
+			this.size += Integer.bitCount(mask);
 		}
 	}
 	
@@ -53,20 +56,24 @@ public class BigIndexedSubList<E> extends AbstractList<E> {
 	 * @param listSize the size of a referenced list
 	 * @throws IndexOutOfBoundsException if a bit in the mask references a non-existing list index
 	 */
-	private static void checkMaskBits(long[] indexMask, int listSize) {
-		int lowestInvalidMaskArrayIndex = listSize >> 6;
+	private static void checkMaskBits(int[] indexMask, int listSize) {
+		int lowestInvalidMaskArrayIndex = listSize / Integer.SIZE;
 		if (indexMask.length <= lowestInvalidMaskArrayIndex) {
 			return;
 		}
-		int lowestInvalidBitIndex = listSize & (Long.SIZE - 1);
-		if (indexMask[lowestInvalidMaskArrayIndex] >> lowestInvalidBitIndex != 0) {
-			int lowestInvalidIndex = listSize
-					+ Long.numberOfTrailingZeros(indexMask[lowestInvalidMaskArrayIndex] >> lowestInvalidBitIndex);
-			throw new IndexOutOfBoundsException(lowestInvalidIndex);
+		
+		int indexMaskMaximumValidIndex = (listSize - 1) / Integer.SIZE;
+		int nValidBitsInMaximumIndex = listSize - indexMaskMaximumValidIndex * Integer.SIZE;
+		
+		int remainder = indexMask[indexMaskMaximumValidIndex] >> nValidBitsInMaximumIndex;
+		if (remainder != 0) {
+			int invalidIndex = Integer.SIZE * indexMaskMaximumValidIndex + nValidBitsInMaximumIndex
+					+ Integer.numberOfTrailingZeros(remainder);
+			throw new IndexOutOfBoundsException(invalidIndex);
 		}
-		for (int i = lowestInvalidMaskArrayIndex + 1; i < indexMask.length; i++) {
+		for (int i = indexMaskMaximumValidIndex + 1; i < indexMask.length; i++) {
 			if (indexMask[i] != 0) {
-				int invalidIndex = Long.SIZE * i + Long.numberOfTrailingZeros(indexMask[i]);
+				int invalidIndex = Integer.SIZE * i + Integer.numberOfTrailingZeros(indexMask[i]);
 				throw new IndexOutOfBoundsException(invalidIndex);
 			}
 		}
@@ -83,15 +90,18 @@ public class BigIndexedSubList<E> extends AbstractList<E> {
 	public BigIndexedSubList(List<E> baseList, BigInteger indexMask) {
 		checkMaskBits(indexMask, baseList.size());
 		this.baseList = baseList;
-		this.indexMask = new long[(indexMask.bitLength() + 63) >> 6];
+		this.size = indexMask.bitCount();
+		this.indexMask = new int[(indexMask.bitLength() + Integer.SIZE - 1) / Integer.SIZE];
 		byte[] byteArray = indexMask.signum() == 0 ? new byte[0] : indexMask.toByteArray();
-		for (int i = 0; i < byteArray.length; i++) {
-			int maskIndex = (byteArray.length - 1 - i) >> 3;
-			int maskIndexOffset = 8 * ((byteArray.length - 1 - i) & 7);
-			long byteValue = byteArray[i] & 255L;
+		
+		int nRelevantBytes = (indexMask.bitLength() + 7) >> 3;
+		
+		for (int i = 0; i < nRelevantBytes; i++) {
+			int maskIndex = i / 4;
+			int maskIndexOffset = 8 * (i - 4 * maskIndex);
+			int byteValue = Byte.toUnsignedInt(byteArray[byteArray.length - 1 - i]);
 			this.indexMask[maskIndex] |= byteValue << maskIndexOffset;
 		}
-		this.size = indexMask.bitCount();
 	}
 	
 	/**
@@ -129,6 +139,9 @@ public class BigIndexedSubList<E> extends AbstractList<E> {
 	
 	@Override
 	public ListIterator<E> listIterator(int index) {
+		if (index < 0 || index > size()) {
+			throw new IndexOutOfBoundsException(index);
+		}
 		return new BigIndexedSubListIterator<>(baseList, indexMask, index);
 	}
 	
@@ -137,22 +150,15 @@ public class BigIndexedSubList<E> extends AbstractList<E> {
 		if (index < 0 || index >= size()) {
 			throw new IndexOutOfBoundsException(index);
 		}
-		int count = 0;
-		int maskIndex;
-		for (maskIndex = 0;; maskIndex++) {
-			int nextCount = Long.bitCount(indexMask[maskIndex]);
-			count += nextCount;
-			if (count > index) {
-				count -= nextCount;
-				break;
-			}
+		int remainingBits = index;
+		int maskIndex = 0;
+		int nextCount;
+		while ((nextCount = Integer.bitCount(indexMask[maskIndex])) <= remainingBits) {
+			maskIndex++;
+			remainingBits -= nextCount;
 		}
-		long remainingMask = indexMask[maskIndex];
-		while (count < index) {
-			count++;
-			remainingMask &= remainingMask - 1;
-		}
-		return baseList.get(maskIndex << 6 | Long.numberOfTrailingZeros(remainingMask));
+		int baseIndex = maskIndex * Integer.SIZE + BitOperations.offsetOfNthBit(indexMask[maskIndex], remainingBits);
+		return baseList.get(baseIndex);
 	}
 	
 	@Override

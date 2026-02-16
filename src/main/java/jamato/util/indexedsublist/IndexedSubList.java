@@ -5,12 +5,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 
+import jamato.util.bitoperations.BitOperations;
+
 /**
  * An indexed sublist is a list that references elements of a base list by their indexes. Only the first 64 elements can
  * be referenced.
  * 
  * @author JSiebel
- *
  * @param <E> the type of elements in this list
  */
 public class IndexedSubList<E> extends AbstractList<E> {
@@ -66,11 +67,7 @@ public class IndexedSubList<E> extends AbstractList<E> {
 		if (index < 0 || index >= size()) {
 			throw new IndexOutOfBoundsException(index);
 		}
-		long remainingIndices = mask;
-		for (int i = 0; i < index; i++) {
-			remainingIndices &= remainingIndices - 1;
-		}
-		return baseList.get(Long.numberOfTrailingZeros(remainingIndices));
+		return baseList.get(BitOperations.offsetOfNthBit(mask, index));
 	}
 	
 	@Override

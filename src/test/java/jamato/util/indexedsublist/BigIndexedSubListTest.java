@@ -16,25 +16,24 @@ import org.junit.jupiter.params.provider.MethodSource;
  * Tests the {@link BigIndexedSubList} class.
  * 
  * @author JSiebel
- *
  */
 class BigIndexedSubListTest {
 	
 	@ParameterizedTest
 	@MethodSource
-	void testLongArrayConstructorIndexCheck(List<?> baseList, long[] mask, int expectedIndex) {
+	void testIntArrayConstructorIndexCheck(List<?> baseList, int[] mask, int expectedIndex) {
 		IndexOutOfBoundsException exception = assertThrows(
 				IndexOutOfBoundsException.class,
 				() -> new BigIndexedSubList<>(baseList, mask));
 		assertEquals(new IndexOutOfBoundsException(expectedIndex).getMessage(), exception.getMessage());
 	}
 	
-	static Stream<Arguments> testLongArrayConstructorIndexCheck() {
+	static Stream<Arguments> testIntArrayConstructorIndexCheck() {
 		return Stream.of(
-				Arguments.of(List.of(), new long[] { 0b1 }, 0),
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b1000 }, 3),
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b0, 0b1 }, 64),
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b0, 0b0, 0b1 }, 128));
+				Arguments.of(List.of(), new int[] {0b1}, 0),
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b1000}, 3),
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b0, 0b1}, 32),
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b0, 0b0, 0b1}, 64));
 	}
 	
 	@ParameterizedTest
@@ -68,15 +67,15 @@ class BigIndexedSubListTest {
 	
 	@ParameterizedTest
 	@MethodSource
-	void testEmpty(List<?> baseList, long[] mask, boolean result) {
+	void testEmpty(List<?> baseList, int[] mask, boolean result) {
 		assertEquals(result, new BigIndexedSubList<>(baseList, mask).isEmpty());
 	}
 	
 	static Stream<Arguments> testEmpty() {
 		return Stream.of(
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b000 }, true),
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b001 }, false),
-				Arguments.of(List.of("a", "b", "c"), new long[] { 0b111 }, false));
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b000}, true),
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b001}, false),
+				Arguments.of(List.of("a", "b", "c"), new int[] {0b111}, false));
 	}
 	
 	@ParameterizedTest
@@ -103,17 +102,17 @@ class BigIndexedSubListTest {
 	
 	@ParameterizedTest
 	@MethodSource
-	void testGetException(List<?> baseList, long[] mask, int index) {
+	void testGetException(List<?> baseList, int[] mask, int index) {
 		BigIndexedSubList<?> BigIndexedSubList = new BigIndexedSubList<>(baseList, mask);
 		assertThrows(IndexOutOfBoundsException.class, () -> BigIndexedSubList.get(index));
 	}
 	
 	static Stream<Arguments> testGetException() {
 		return Stream.of(
-				Arguments.of(List.of(), new long[] { 0b0 }, 0),
-				Arguments.of(List.of("a", "b", "c", "d", "e"), new long[] { 0b10110 }, -1),
-				Arguments.of(List.of("a", "b", "c", "d", "e"), new long[] { 0b10110 }, 3),
-				Arguments.of(List.of("a", "b", "c", "d", "e"), new long[] { 0b11111 }, 5));
+				Arguments.of(List.of(), new int[] {0b0}, 0),
+				Arguments.of(List.of("a", "b", "c", "d", "e"), new int[] {0b10110}, -1),
+				Arguments.of(List.of("a", "b", "c", "d", "e"), new int[] {0b10110}, 3),
+				Arguments.of(List.of("a", "b", "c", "d", "e"), new int[] {0b11111}, 5));
 	}
 	
 	private static List<?> listOfSize(int size) {
