@@ -10,13 +10,12 @@ import jamato.util.indexedsublist.IndexedSubList;
  * A {@link ListIterator} for big {@link PowerSet}s. This iterator does not support any modifying operations.
  * 
  * @author JSiebel
- *
  * @param <E> the type of elements returned by this list iterator
  */
 class PowerSetListIterator<T> implements ListIterator<List<T>> {
 	
 	/** The list of which subsets are returned. */
-	private List<T> baseList;
+	private final List<T> baseList;
 	
 	/** The next index. */
 	private long index;

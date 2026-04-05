@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Objects;
+import java.util.RandomAccess;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 
@@ -19,16 +20,15 @@ import jamato.util.largecollection.LargeUnmodifiableList;
  * A power set contains all possible sub-sets of a given input collection.
  * <p>
  * Note: Despite the name, which is chosen to match the name used in set theory, this class implements the {@link List}
- * interface. The sub-"sets" returned are also lists. The order is kept consistently for all lists, and also keep the
- * order of the input collection (if defined).
+ * interface. The elements (sub-"sets") returned are also lists. The order in the elements is the same as in the input
+ * collection (if defined).
  * 
  * @author JSiebel
- *
  * @param <T> the type of elements in the input collection
  */
-public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifiableList<List<T>> {
+public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifiableList<List<T>>, RandomAccess {
 	
-	private final List<T> baseList;
+	final List<T> baseList;
 	
 	/**
 	 * Creates a new power set.
@@ -44,16 +44,9 @@ public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifia
 		if (baseList.size() < Long.SIZE - 1) {
 			return LongStream.rangeClosed(0, (1L << baseList.size()) - 1)
 					.mapToObj(bitMask -> new IndexedSubList<>(baseList, bitMask));
-		} else if (baseList.size() == Long.SIZE) {
-			return LongStream
-					.concat(LongStream.rangeClosed(0, Long.MAX_VALUE), LongStream.rangeClosed(Long.MIN_VALUE, -1))
-					.mapToObj(bitMask -> new IndexedSubList<>(baseList, bitMask));
 		} else {
 			return Stream.concat(
-					LongStream
-							.concat(
-									LongStream.rangeClosed(0, Long.MAX_VALUE),
-									LongStream.rangeClosed(Long.MIN_VALUE, -1))
+					LongStream.rangeClosed(0, Long.MAX_VALUE)
 							.mapToObj(bitMask -> new IndexedSubList<>(baseList, bitMask)),
 					Stream.iterate(
 							BigInteger.ONE.shiftLeft(Long.SIZE),
@@ -117,7 +110,7 @@ public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifia
 	
 	@Override
 	public List<T> get(int index) {
-		if (index < 0 || baseList.size() < Integer.SIZE - 1 && index >= size()) {
+		if (index < 0 || (baseList.size() < Integer.SIZE - 1 && index >= size())) {
 			throw new IndexOutOfBoundsException(index);
 		}
 		return new IndexedSubList<>(baseList, index);
@@ -129,6 +122,16 @@ public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifia
 			throw new IndexOutOfBoundsException("Index out of range: " + index);
 		}
 		return new BigIndexedSubList<>(baseList, index);
+	}
+	
+	@Override
+	public LargeUnmodifiableList<List<T>> subList(int fromIndex, int toIndex) {
+		return subList(BigInteger.valueOf(fromIndex), BigInteger.valueOf(toIndex));
+	}
+	
+	@Override
+	public LargeUnmodifiableList<List<T>> subList(BigInteger fromIndex, BigInteger toIndex) {
+		return new PowerSetSublist<>(this, fromIndex, toIndex);
 	}
 	
 	@Override
@@ -144,6 +147,6 @@ public class PowerSet<T> extends AbstractList<List<T>> implements LargeUnmodifia
 	
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return baseList.hashCode();
 	}
 }
