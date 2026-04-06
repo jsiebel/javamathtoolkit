@@ -1,19 +1,16 @@
 package jamato.primes;
 
+import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.PrimitiveIterator;
 import java.util.PrimitiveIterator.OfInt;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.IntConsumer;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
 import jamato.algebra.Exponentiation;
 
 /**
- * Provides methods concerning primes in the integer range.
+ * Provides methods concerning primes.
  *
  * @author JSiebel
  *
@@ -308,48 +305,18 @@ public final class Primes{
 	 * @return an array of prime numbers
 	 */
 	public static IntStream getPrimeDivisorsStream(int number){
-		return StreamSupport.intStream(
-				new Spliterators.AbstractIntSpliterator(Long.MAX_VALUE,
-						Spliterator.ORDERED | Spliterator.IMMUTABLE | Spliterator.NONNULL){
-					
-					PrimitiveIterator.OfInt iterator = iterator();
-					
-					int limit = (int) Math.sqrt(number);
-					
-					int remainder = number;
-					
-					@Override
-					public boolean tryAdvance(IntConsumer action){
-						Objects.requireNonNull(action);
-						if (remainder <= 1){
-							return false;
-						}
-						int p;
-						do{
-							p = iterator.nextInt();
-							if (p > limit){
-								p = remainder;
-								break;
-							}
-						}while (remainder % p != 0);
-						
-						action.accept(p);
-						
-						boolean even = true;
-						do{
-							remainder /= p;
-							even = !even;
-							if (even){
-								limit /= p;
-							}
-						}while (remainder % p == 0);
-						if (!even){
-							limit = (int) ((limit + 1) / Math.sqrt(p));
-						}
-						return true;
-					}
-				},
-				false);
+		return StreamSupport.intStream(new IntPrimeDivisorsSpliterator(number), false);
+	}
+	
+	/**
+	 * An ordered stream of all prime divisors of the given number. Each prime appears at most once, even if the number
+	 * is divisible by it multiple times.
+	 *
+	 * @param number a number
+	 * @return an array of prime numbers
+	 */
+	public static IntStream getIntPrimeDivisorsStream(BigInteger number){
+		return StreamSupport.intStream(new IntPrimeDivisorsSpliterator(number), false);
 	}
 	
 	/**
