@@ -7,8 +7,6 @@ import java.util.PrimitiveIterator.OfInt;
 import java.util.stream.IntStream;
 import java.util.stream.StreamSupport;
 
-import jamato.algebra.Exponentiation;
-
 /**
  * Provides methods concerning primes.
  *
@@ -61,40 +59,11 @@ public final class Primes{
 	 */
 	private static boolean isSievedNumberPrime(int n){
 		if (n < 2047){
-			return millerRabinTest(n, 2);
+			return MillerRabinTest.test(n, 2);
 		}else if (n < 9080191){
-			return millerRabinTest(n, 31) && millerRabinTest(n, 73);
+			return MillerRabinTest.test(n, 31) && MillerRabinTest.test(n, 73);
 		}else{
-			return millerRabinTest(n, 2) && millerRabinTest(n, 7) && millerRabinTest(n, 61);
-		}
-	}
-	
-	/**
-	 * Checks if a number is a prime according to the Miller-Rabin test with the given base.
-	 *
-	 * @param n the number to be checked
-	 * @param base the base used for the check
-	 * @return <code>true</code> if the number is a prime or a pseudo-prime, <code>false</code> otherwise
-	 * @see "https://en.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test"
-	 */
-	private static boolean millerRabinTest(int n, int base){
-		int s = Integer.numberOfTrailingZeros(n - 1);
-		int d = (n - 1) >>> s;
-		
-		int p = Exponentiation.powMod(base, d, n);
-		if (p == 1 || p == n - 1){
-			// base ^ d ≡ 1 or base ^ d ≡ -1 (mod n)
-			return true;
-		}else{
-			for (int r = 1; r < s; r++){
-				p = (int) ((long) p * p % n);
-				if (p == n - 1){
-					// base ^ (2^r * d) ≡ -1 (mod n)
-					return true;
-				}
-			}
-			// base ^ (2^s * d) = base ^ (n-1) ≢ 1
-			return false;
+			return MillerRabinTest.test(n, 2) && MillerRabinTest.test(n, 7) && MillerRabinTest.test(n, 61);
 		}
 	}
 	
