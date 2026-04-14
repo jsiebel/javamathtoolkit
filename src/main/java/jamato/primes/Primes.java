@@ -133,6 +133,7 @@ public final class Primes{
 	 * A stream of int primes in order, starting at the given index. The stream's size is
 	 * <code>({@link #NUMBER_OF_INT_PRIMES} - fromIndex)</code>.
 	 *
+	 * @param fromIndex the index of the first prime returned
 	 * @return a stream of primes.
 	 */
 	public static IntStream stream(int fromIndex){
@@ -144,6 +145,8 @@ public final class Primes{
 	/**
 	 * A stream of int primes in order, starting at the given start index, and ending before the given end index.
 	 *
+	 * @param fromIndex the index of the first prime returned
+	 * @param toIndex the index of the last prime returned, exclusive
 	 * @return a stream of primes.
 	 */
 	public static IntStream stream(int fromIndex, int toIndex){
@@ -166,10 +169,18 @@ public final class Primes{
 		if (lowerBound < cache.max()){
 			return stream(cache.getInsertionIndex(lowerBound));
 		}else{
-			return StreamSupport.intStream(new PrimeSpliterator(lowerBound, GREATEST_INT_PRIME), true);
+			return SIEVE.stream(lowerBound - 1).filter(Primes::isSievedNumberPrime);
 		}
 	}
+
 	
+	/**
+	 * A stream of primes, beginning with the given lower bound.
+	 *
+	 * @param lowerBound the lower bound of the stream, the first element is the least prime ≥ this
+	 * @param lowerBound the upper bound of the stream, exclusive
+	 * @return a stream of primes
+	 */
 	public static IntStream rangeStream(int lowerBound, int upperBound){
 		if (upperBound < cache.max()){
 			int lowerBoundIndex = cache.getInsertionIndex(lowerBound);
@@ -179,7 +190,7 @@ public final class Primes{
 			int lowerBoundIndex = cache.getInsertionIndex(lowerBound);
 			return cacheFillingStream(lowerBoundIndex, NUMBER_OF_INT_PRIMES).takeWhile(n -> n < upperBound);
 		}else{
-			return StreamSupport.intStream(new PrimeSpliterator(lowerBound, upperBound - 1), true);
+			return SIEVE.stream(lowerBound - 1, upperBound - 1).filter(Primes::isSievedNumberPrime);
 		}
 	}
 	
@@ -339,7 +350,7 @@ public final class Primes{
 	/**
 	 * Calculates the smallest prime number that is greater than the given number without using the cache.
 	 *
-	 * @param number a number, must not be smaller than the greatest sieve prime
+	 * @param number a number, must be smaller than the greatest sieve prime
 	 * @return the next prime number
 	 */
 	static int calculateNextPrimeAfter(int number){
