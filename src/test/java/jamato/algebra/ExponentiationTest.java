@@ -1,7 +1,6 @@
 package jamato.algebra;
 
 import static jamato.algebra.Exponentiation.pow;
-import static jamato.algebra.Exponentiation.powMod;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.stream.Stream;
@@ -40,33 +39,5 @@ class ExponentiationTest {
 	@Test
 	void testPowRing() {
 		assertEquals(IntRational.ONE, pow(IntRational.ONE, Integer.MIN_VALUE, IntRational.ONE));
-	}
-	
-	@ParameterizedTest
-	@MethodSource
-	void testPowMod(int base, int exponent, int modulus, int result) {
-		assertEquals(result, powMod(base, exponent, modulus));
-	}
-	
-	static Stream<Arguments> testPowMod() {
-		return Stream.of(
-				Arguments.of(0, 0, 37, 1),
-				Arguments.of(-7, 3, 1000, -343),
-				Arguments.of(1000, 371, 9, 1),
-				Arguments.of(46341, 2, 1000000, 488281));
-	}
-	
-	@ParameterizedTest
-	@MethodSource
-	void testPowModLong(long base, int exponent, int modulus, int result) {
-		assertEquals(result, powMod(base, exponent, modulus));
-	}
-	
-	static Stream<Arguments> testPowModLong() {
-		return Stream.of(
-				Arguments.of(0, 0, 37, 1),
-				Arguments.of(-7, 3, 1000, -343),
-				Arguments.of(1000, 371, 9, 1),
-				Arguments.of(Long.MAX_VALUE / 4, 2, Integer.MAX_VALUE, 536870912));
 	}
 }

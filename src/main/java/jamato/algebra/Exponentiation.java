@@ -5,9 +5,9 @@ package jamato.algebra;
  * @author JSiebel
  *
  */
-public class Exponentiation {
+public final class Exponentiation{
 	
-	protected Exponentiation() {
+	private Exponentiation(){
 	}
 
 	/**
@@ -47,60 +47,6 @@ public class Exponentiation {
 			base *= base;
 		}
 		return result;
-	}
-	
-	private static final int SQRT_MAX_INT = 46340;
-	
-	/**
-	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
-	 * @param base     the base of the exponentiation
-	 * @param exponent the exponent of the exponentiation
-	 * @param modulus the modulus
-	 * @return <code>base<sup>exponent</sup> % modulus</code>
-	 */
-	public static int powMod(int base, int exponent, int modulus) {
-		if (modulus > SQRT_MAX_INT) {
-			return powMod((long)base, exponent, modulus);
-		}else if (exponent < 0) {
-			throw new ArithmeticException();
-		}else if (modulus <= 0) {
-			throw new IllegalArgumentException("Non-positive modulus: " + modulus);
-		}
-		int basePower = base % modulus;
-		int result = 1;
-		while (exponent > 0) {
-			if ((exponent & 1) == 1) {
-				result = result * basePower % modulus;
-			}
-			exponent >>= 1;
-			basePower = basePower * basePower % modulus;
-		}
-		return result;
-	}
-	
-	/**
-	 * Returns <code>(base<sup>exponent</sup>) % modulus</code>.
-	 * @param base     the base of the exponentiation
-	 * @param exponent the exponent of the exponentiation
-	 * @param modulus the modulus
-	 * @return <code>base<sup>exponent</sup> % modulus</code>
-	 */
-	public static int powMod(long base, int exponent, int modulus) {
-		if (exponent < 0) {
-			throw new ArithmeticException();
-		}else if (modulus <= 0) {
-			throw new IllegalArgumentException("Non-positive modulus: " + modulus);
-		}
-		long basePower = base % modulus;
-		long result = 1;
-		while (exponent > 0) {
-			if ((exponent & 1) == 1) {
-				result = result * basePower % modulus;
-			}
-			exponent >>= 1;
-			basePower = basePower * basePower % modulus;
-		}
-		return (int) result;
 	}
 	
 	/**

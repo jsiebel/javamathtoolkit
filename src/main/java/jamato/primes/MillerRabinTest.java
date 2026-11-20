@@ -1,6 +1,6 @@
 package jamato.primes;
 
-import jamato.algebra.Exponentiation;
+import jamato.algebra.Modulo;
 
 /**
  * This utility class provides methods for performing the Miller-Rabin primality test.
@@ -31,7 +31,7 @@ public final class MillerRabinTest{
 		}
 		int s = Integer.numberOfTrailingZeros(n - 1);
 		int d = (n - 1) >>> s;
-		int p = Exponentiation.powMod(base, d, n);
+		int p = Modulo.pow(base, d, n);
 		if (p == 1 || p == n - 1){
 			// base ^ d ≡ 1 or base ^ d ≡ -1 (mod n)
 			return true;
