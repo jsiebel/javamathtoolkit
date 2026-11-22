@@ -227,7 +227,7 @@ class PrimesTest{
 	
 	@ParameterizedTest
 	@MethodSource
-	void testRangeIteratorWithIndices(int lowerBound, int upperBound, int[] expected){
+	void testRangeIteratorWithBounds(int lowerBound, int upperBound, int[] expected){
 		// when
 		OfInt iterator = Primes.rangeIterator(lowerBound, upperBound);
 		
@@ -239,7 +239,7 @@ class PrimesTest{
 		assertFalse(iterator.hasNext());
 	}
 	
-	static Stream<Arguments> testRangeIteratorWithIndices(){
+	static Stream<Arguments> testRangeIteratorWithBounds(){
 		return Stream.of(
 				arguments(Integer.MIN_VALUE, 5, new int[]{ 2, 3 }),
 				arguments(2, 6, new int[]{ 2, 3, 5 }),
@@ -294,11 +294,11 @@ class PrimesTest{
 	
 	@ParameterizedTest
 	@MethodSource
-	void testGetIntPrimeDivisorsStream(BigInteger number, int[] expected){
-		assertArrayEquals(expected, Primes.getIntPrimeDivisorsStream(number).toArray());
+	void testGetPrimeDivisorsStreamBigInteger(BigInteger number, int[] expected){
+		assertArrayEquals(expected, Primes.getPrimeDivisorsStream(number).toArray());
 	}
 	
-	static Stream<Arguments> testGetIntPrimeDivisorsStream(){
+	static Stream<Arguments> testGetPrimeDivisorsStreamBigInteger(){
 		return Stream.of(
 				arguments(BigInteger.valueOf(1), new int[0]),
 				arguments(BigInteger.valueOf(2), new int[]{ 2 }),

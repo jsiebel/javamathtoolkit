@@ -13,13 +13,13 @@ import java.util.function.IntConsumer;
 final class PrimesSieveSpliterator extends Spliterators.AbstractIntSpliterator{
 	
 	/** The prime sieve that defines the next element */
-	private PrimesSieve primeSieve;
+	private final PrimesSieve primeSieve;
 	
 	/** The previously returned value, all upcoming values are strictly greater than this. */
 	private int currentValue;
 	
 	/** The upper search limit, inclusive. */
-	private int upperBound;
+	private final int upperBound;
 	
 	/**
 	 * Creates a Spliterator for the given prime sieve which processes all candidates in the given range.

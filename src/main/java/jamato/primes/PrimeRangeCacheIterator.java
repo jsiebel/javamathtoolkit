@@ -21,7 +21,7 @@ class PrimeRangeCacheIterator implements PrimitiveIterator.OfInt{
 	 * Creates a new instance.
 	 *
 	 * @param cache the cache to be filled
-	 * @param lowerBound the lower bound, the first prime it the lowest prime greater than or equal to this value. May
+	 * @param lowerBound the lower bound, the first prime is the lowest prime greater than or equal to this value. May
 	 * not exceed the greatest value in the cache.
 	 * @param upperBoundInclusive the upper bound, the last prime returned is the greatest prime lower than or equal to
 	 * this value

@@ -94,10 +94,34 @@ class PrimesSieve{
 		return number + candidateStep[number % size];
 	}
 	
+	/**
+	 * Returns the least prime candidate greater than the given number; that is the least number that is divisible by
+	 * none of the sieve primes.
+	 *
+	 * @param number a number, must be greater than all sieve primes
+	 * @return a prime candidate
+	 */
+	public long getNextCandidate(long number){
+		return number + candidateStep[(int) (number % size)];
+	}
+	
+	/**
+	 * Returns a stream of prime candidates starting after the given value.
+	 *
+	 * @param startExclusive the starting point, exclusive
+	 * @return a stream of prime candidates
+	 */
 	public IntStream stream(int startExclusive){
 		return stream(startExclusive, Integer.MAX_VALUE);
 	}
 	
+	/**
+	 * Returns a stream of prime candidates in the given range.
+	 *
+	 * @param startExclusive the starting point, exclusive
+	 * @param endInclusive the end point, inclusive
+	 * @return a stream of prime candidates
+	 */
 	public IntStream stream(int startExclusive, int endInclusive){
 		return StreamSupport.intStream(new PrimesSieveSpliterator(this, startExclusive, endInclusive), true);
 	}

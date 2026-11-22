@@ -37,7 +37,8 @@ public final class Primes{
 	}
 	
 	/**
-	 * Checks if the given number is a prime.
+	 * Checks if the given number is a prime. This method uses a deterministic variant of the Miller-Rabin primality
+	 * test with parameters taken from <a href="https://miller-rabin.appspot.com">miller-rabin.appspot.com</a>.
 	 *
 	 * @param number the number to be checked
 	 * @return <code>true</code> if the number is prime, <code>false</code> if it is composite
@@ -54,16 +55,17 @@ public final class Primes{
 	 * Checks if the given number is prime. If the number is divisible by one of the sieve primes, the result is
 	 * undefined.
 	 *
-	 * @param n the number to be checked
+	 * @param number the number to be checked
 	 * @return <code>true</code> if the number is prime
 	 */
-	private static boolean isSievedNumberPrime(int n){
-		if (n < 2047){
-			return MillerRabinTest.test(n, 2);
-		}else if (n < 9080191){
-			return MillerRabinTest.test(n, 31) && MillerRabinTest.test(n, 73);
+	private static boolean isSievedNumberPrime(int number){
+		if (number < 2047){
+			return MillerRabinTest.test(number, 2);
+		}else if (number < 9080191){
+			return MillerRabinTest.test(number, 31) && MillerRabinTest.test(number, 73);
 		}else{
-			return MillerRabinTest.test(n, 2) && MillerRabinTest.test(n, 7) && MillerRabinTest.test(n, 61);
+			return MillerRabinTest.test(number, 2) && MillerRabinTest.test(number, 7)
+					&& MillerRabinTest.test(number, 61);
 		}
 	}
 	
@@ -143,7 +145,7 @@ public final class Primes{
 	}
 	
 	/**
-	 * A stream of int primes in order, starting at the given start index, and ending before the given end index.
+	 * A stream of all primes, starting at the given start index, and ending before the given end index.
 	 *
 	 * @param fromIndex the index of the first prime returned
 	 * @param toIndex the index of the last prime returned, exclusive
@@ -172,10 +174,9 @@ public final class Primes{
 			return SIEVE.stream(lowerBound - 1).filter(Primes::isSievedNumberPrime);
 		}
 	}
-
 	
 	/**
-	 * A stream of primes, beginning with the given lower bound.
+	 * A stream of all primes in the given range.
 	 *
 	 * @param lowerBound the lower bound of the stream, the first element is the least prime ≥ this
 	 * @param lowerBound the upper bound of the stream, exclusive
@@ -204,22 +205,46 @@ public final class Primes{
 		return StreamSupport.intStream(new PrimeCacheSpliterator(cache, startIndex, endIndex), false);
 	}
 	
+	/**
+	 * Returns an iterator over all int primes.
+	 *
+	 * @return an iterator over all int primes.
+	 */
 	public static PrimitiveIterator.OfInt iterator(){
 		return new PrimeRangeCacheIterator(cache, 2, GREATEST_INT_PRIME);
 	}
 	
+	/**
+	 * Returns an iterator over the int primes starting at the given index.
+	 *
+	 * @param fromIndex the index of the first prime returned
+	 * @return an iterator over the int primes starting at the given index
+	 */
 	public static PrimitiveIterator.OfInt iterator(int fromIndex){
 		rangeCheck(fromIndex);
 		fillCacheToIndex(fromIndex);
 		return new PrimeCacheIterator(cache, fromIndex, NUMBER_OF_INT_PRIMES);
 	}
 	
+	/**
+	 * Returns an iterator over the primes in the given index range.
+	 *
+	 * @param fromIndex the index of the first prime returned
+	 * @param toIndex the index of the last prime returned
+	 * @return an iterator over all primes in the given index range
+	 */
 	public static PrimitiveIterator.OfInt iterator(int fromIndex, int toIndex){
 		rangeCheck(fromIndex, toIndex);
 		fillCacheToIndex(fromIndex);
 		return new PrimeCacheIterator(cache, fromIndex, toIndex);
 	}
 	
+	/**
+	 * Returns an iterator over the primes starting at the given value.
+	 *
+	 * @param lowerBound the starting point of the primes, inclusive
+	 * @return an iterator over the primes starting at the given value
+	 */
 	public static PrimitiveIterator.OfInt rangeIterator(int lowerBound){
 		if (cache.getInsertionIndex(lowerBound) < cache.size()){
 			return new PrimeRangeCacheIterator(cache, lowerBound, GREATEST_INT_PRIME);
@@ -228,6 +253,13 @@ public final class Primes{
 		}
 	}
 	
+	/**
+	 * Returns an iterator over all primes in the given range.
+	 *
+	 * @param lowerBound the starting point of the primes, inclusive
+	 * @param upperBound the end point of the primes, exclusive
+	 * @return an iterator over all primes in the given range
+	 */
 	public static PrimitiveIterator.OfInt rangeIterator(int lowerBound, int upperBound){
 		if (cache.getInsertionIndex(lowerBound) < cache.size()){
 			return new PrimeRangeCacheIterator(cache, lowerBound, upperBound - 1);
@@ -236,33 +268,56 @@ public final class Primes{
 		}
 	}
 	
-	public static int[] getDivisors(int n){
+	/**
+	 * Returns an array of all positive divisors of the given number.
+	 *
+	 * @param number the number to be factorized
+	 * @return an unordered array of divisors
+	 */
+	public static int[] getDivisors(int number){
 		int[] result = { 1 };
 		OfInt primeIterator = iterator();
 		
-		int limit = (int) Math.floor(Math.sqrt(n));
-		while (n > 1){
+		int limit = (int) Math.floor(Math.sqrt(number));
+		while (number > 1){
 			int p = primeIterator.nextInt();
 			
 			if (p > limit){
-				p = n;
+				p = number;
 			}
 			
-			if (n % p == 0){
+			if (number % p == 0){
 				int exponent = 1;
-				n /= p;
-				while (n % p == 0){
+				number /= p;
+				while (number % p == 0){
 					exponent++;
-					n /= p;
-					if (exponent % 2 == 0){
+					number /= p;
+					if ((exponent & 1) == 0){
 						limit /= p;
 					}
 				}
 				result = multiplyArrayContents(result, p, result.length * (exponent + 1));
-				if (exponent % 2 != 0){
+				if ((exponent & 1) != 0){
 					limit = (int) Math.floor((limit + 1) / Math.sqrt(p));
 				}
 			}
+		}
+		return result;
+	}
+	
+	/**
+	 * Creates an array of the given size, and fills it with multiples of the original. The value at index
+	 * <code>i*source.length+j</code> is <code>source[j] * factor^i</code>.
+	 *
+	 * @param source the source array
+	 * @param factorBase the factor that the fields are multiplied with
+	 * @param newSize the size of the result array
+	 * @return the result array
+	 */
+	private static int[] multiplyArrayContents(int[] source, int factorBase, int newSize){
+		int[] result = Arrays.copyOf(source, newSize);
+		for (int i = source.length; i < result.length; i++){
+			result[i] = result[i - source.length] * factorBase;
 		}
 		return result;
 	}
@@ -289,31 +344,14 @@ public final class Primes{
 	}
 	
 	/**
-	 * An ordered stream of all prime divisors of the given number. Each prime appears at most once, even if the number
-	 * is divisible by it multiple times.
+	 * An ordered stream of all prime divisors in the in range of the given number. Each prime appears at most once,
+	 * even if the number is divisible by it multiple times.
 	 *
 	 * @param number a number
 	 * @return an array of prime numbers
 	 */
-	public static IntStream getIntPrimeDivisorsStream(BigInteger number){
+	public static IntStream getPrimeDivisorsStream(BigInteger number){
 		return StreamSupport.intStream(new IntPrimeDivisorsSpliterator(number), false);
-	}
-	
-	/**
-	 * Creates an array of the given size, and fills it with multiples of the original. The value at index
-	 * <code>i*source.length+j</code> is <code>source[j] * factor^i</code>.
-	 *
-	 * @param source the source array
-	 * @param factorBase the factor that the fields are multiplied with
-	 * @param newSize the size of the result array
-	 * @return the result array
-	 */
-	private static int[] multiplyArrayContents(int[] source, int factorBase, int newSize){
-		int[] result = Arrays.copyOf(source, newSize);
-		for (int i = source.length; i < result.length; i++){
-			result[i] = result[i - source.length] * factorBase;
-		}
-		return result;
 	}
 	
 	/**
