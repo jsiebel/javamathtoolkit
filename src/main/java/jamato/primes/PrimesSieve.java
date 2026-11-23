@@ -2,6 +2,7 @@ package jamato.primes;
 
 import java.util.Arrays;
 import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import java.util.stream.StreamSupport;
 
 /**
@@ -124,5 +125,26 @@ class PrimesSieve{
 	 */
 	public IntStream stream(int startExclusive, int endInclusive){
 		return StreamSupport.intStream(new PrimesSieveSpliterator(this, startExclusive, endInclusive), true);
+	}
+	
+	/**
+	 * Returns a stream of prime candidates starting after the given value.
+	 *
+	 * @param startExclusive the starting point, exclusive
+	 * @return a stream of prime candidates
+	 */
+	public LongStream stream(long startExclusive){
+		return stream(startExclusive, Long.MAX_VALUE);
+	}
+	
+	/**
+	 * Returns a stream of prime candidates in the given range.
+	 *
+	 * @param startExclusive the starting point, exclusive
+	 * @param endInclusive the end point, inclusive
+	 * @return a stream of prime candidates
+	 */
+	public LongStream stream(long startExclusive, long endInclusive){
+		return StreamSupport.longStream(new LongPrimesSieveSpliterator(this, startExclusive, endInclusive), true);
 	}
 }

@@ -87,7 +87,7 @@ class MillerRabinTestTest{
 				arguments(11, Primes.GREATEST_INT_PRIME, true),
 				arguments(13, Primes.GREATEST_INT_PRIME, true),
 				arguments(15, Primes.GREATEST_INT_PRIME, false),
-				arguments(9223372036854775783L, Primes.GREATEST_INT_PRIME, true),
+				arguments(LongPrimes.GREATEST_LONG_PRIME, Primes.GREATEST_INT_PRIME, true),
 				arguments(Long.MAX_VALUE, Primes.GREATEST_INT_PRIME, false));
 	}
 }
